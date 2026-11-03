@@ -8,6 +8,7 @@
 #include "config.h"
 #include "detection.h"
 #include "sensing.h"
+#include "wifi_control.h"
 
 static Servo m2Servo;
 static int servoAngle = SERVO_HOME_ANGLE;
@@ -28,7 +29,29 @@ static void writeServo(int angle) {
 }
 
 void moveServo(int angle) {
-  writeServo(angle);
+  if (angle < SERVO_MIN_ANGLE) angle = SERVO_MIN_ANGLE;
+  if (angle > SERVO_MAX_ANGLE) angle = SERVO_MAX_ANGLE;
+
+  // Keep every commanded position on the 5-degree grid.
+  angle = ((angle + SERVO_STEP_DEG / 2) / SERVO_STEP_DEG) * SERVO_STEP_DEG;
+
+  if (angle < SERVO_MIN_ANGLE) angle = SERVO_MIN_ANGLE;
+  if (angle > SERVO_MAX_ANGLE) angle = SERVO_MAX_ANGLE;
+
+  while (servoAngle != angle) {
+    int next;
+
+    if (servoAngle < angle) {
+      next = servoAngle + SERVO_STEP_DEG;
+      if (next > angle) next = angle;
+    } else {
+      next = servoAngle - SERVO_STEP_DEG;
+      if (next < angle) next = angle;
+    }
+
+    writeServo(next);
+    wifiServiceDelay(SERVO_STEP_DELAY_MS);
+  }
 
   Serial.print("Servo -> ");
   Serial.print(servoAngle);
@@ -49,7 +72,7 @@ static void reportLimits() {
 // White light is held so the reading is comparable to the white column.
 static void reportPosition() {
   setRGB(255, 255, 255);
-  delay(SEEK_SETTLE_MS);
+  wifiServiceDelay(SEEK_SETTLE_MS);
 
   float reading = readSeekAverage();
   int detected = classifyUnderWhite(reading);
@@ -70,12 +93,7 @@ static void reportPosition() {
 }
 
 static void jogServo(int delta) {
-  int next = servoAngle + delta;
-
-  if (next < SERVO_MIN_ANGLE) next = SERVO_MIN_ANGLE;
-  if (next > SERVO_MAX_ANGLE) next = SERVO_MAX_ANGLE;
-
-  writeServo(next);
+  moveServo(servoAngle + delta);
   reportPosition();
 }
 
@@ -90,11 +108,11 @@ static void scanReport() {
   Serial.println(SERVO_MAX_ANGLE);
 
   setRGB(255, 255, 255);
-  delay(SEEK_SETTLE_MS);
+  wifiServiceDelay(SEEK_SETTLE_MS);
 
   for (int angle = SERVO_MIN_ANGLE; angle <= SERVO_MAX_ANGLE; angle += SEEK_STEP_DEG) {
     writeServo(angle);
-    delay(SEEK_SETTLE_MS);
+    wifiServiceDelay(SEEK_SETTLE_MS);
 
     float reading = readSeekAverage();
     int detected = classifyUnderWhite(reading);
@@ -126,7 +144,7 @@ static int seekColor(int targetIndex) {
        angle += SEEK_STEP_DEG) {
 
     writeServo(angle);
-    delay(SEEK_SETTLE_MS);
+    wifiServiceDelay(SEEK_SETTLE_MS);
 
     float reading = readSeekAverage();
     int detected = classifyUnderWhite(reading);
@@ -225,7 +243,7 @@ bool seekForCommand() {
   // Hold white light while hunting so the comparison column is the
   // same one the sweep reads against.
   setRGB(255, 255, 255);
-  delay(SEEK_SETTLE_MS);
+  wifiServiceDelay(SEEK_SETTLE_MS);
 
   Serial.print("Seeking ");
   Serial.print(colors[targetIndex].name);

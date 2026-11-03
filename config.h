@@ -24,11 +24,13 @@ const int SERVO_MIN_ANGLE = 0;
 const int SERVO_MAX_ANGLE = 120;
 
 // Sweep used while hunting for a color.
-const int SEEK_STEP_DEG = 3;
+const int SERVO_STEP_DEG = 5;
+const unsigned long SERVO_STEP_DELAY_MS = 80;
+const int SEEK_STEP_DEG = SERVO_STEP_DEG;
 const int SEEK_SETTLE_MS = 150;
 const int SEEK_SAMPLES = 8;
 const int SEEK_REQUIRED_HITS = 2;
-const int JOG_STEP_DEG = 4;
+const int JOG_STEP_DEG = SERVO_STEP_DEG;
 
 // A reading further than this from every calibration row is treated as
 // "nothing under the sensor" instead of the closest color.

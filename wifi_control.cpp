@@ -95,7 +95,7 @@ static void sendStatus(WiFiClient& client) {
 
   client.print("{\"mode\":\"");
   client.print(modeName());
-  client.print("\",\"angle\":");
+  client.print("\",\"m2\":");
   client.print(servoAngleNow());
   client.print(",\"strips\":");
   client.print(stripsCalibrated);
@@ -233,10 +233,13 @@ async function refresh() {
     const r = await fetch('/status', {cache: 'no-store'});
     const j = await r.json();
     document.getElementById('status').textContent =
-      j.mode + ' | angle ' + j.angle + ' deg | strips ' + j.strips +
-      ' | LED ' + j.displayed + ' | candidate ' + j.candidate +
-      ' | LDR ' + j.ldr + ' | lift ' + j.lift +
-      ' | magnet ' + (j.magnet ? 'ON' : 'OFF');
+      'Mode: ' + j.mode +
+      '\nM2 servo: ' + j.m2 + ' deg' +
+      '\nLift servo: ' + j.lift + ' deg' +
+      '\nCalibrated strips: ' + j.strips +
+      '\nLED: ' + j.displayed + ' | candidate: ' + j.candidate +
+      '\nLDR: ' + j.ldr +
+      '\nMagnet: ' + (j.magnet ? 'ON' : 'OFF');
   } catch (e) {
   }
 }
@@ -354,7 +357,6 @@ void wifiControlBegin() {
 
 void wifiControlPoll() {
   if (!wifiEnabled) return;
-
   if (WiFi.status() != WL_CONNECTED) {
     if (serverStarted) {
       httpServer.end();
@@ -417,4 +419,13 @@ void wifiControlPoll() {
   }
 
   handleHttpClient();
+}
+
+void wifiServiceDelay(unsigned long ms) {
+  unsigned long start = millis();
+
+  while (millis() - start < ms) {
+    wifiControlPoll();
+    delay(5);
+  }
 }

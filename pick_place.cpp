@@ -6,6 +6,7 @@
 #include "command_input.h"
 #include "config.h"
 #include "servo_arm.h"
+#include "wifi_control.h"
 
 static Servo liftServo;
 static int liftAngle = LIFT_UP_ANGLE;
@@ -23,8 +24,27 @@ static void liftTo(int angle) {
   if (angle < LIFT_MIN_ANGLE) angle = LIFT_MIN_ANGLE;
   if (angle > LIFT_MAX_ANGLE) angle = LIFT_MAX_ANGLE;
 
-  liftAngle = angle;
-  liftServo.write(liftAngle);
+  // Keep every commanded position on the 5-degree grid.
+  angle = ((angle + SERVO_STEP_DEG / 2) / SERVO_STEP_DEG) * SERVO_STEP_DEG;
+
+  if (angle < LIFT_MIN_ANGLE) angle = LIFT_MIN_ANGLE;
+  if (angle > LIFT_MAX_ANGLE) angle = LIFT_MAX_ANGLE;
+
+  while (liftAngle != angle) {
+    int next;
+
+    if (liftAngle < angle) {
+      next = liftAngle + SERVO_STEP_DEG;
+      if (next > angle) next = angle;
+    } else {
+      next = liftAngle - SERVO_STEP_DEG;
+      if (next < angle) next = angle;
+    }
+
+    liftAngle = next;
+    liftServo.write(liftAngle);
+    wifiServiceDelay(SERVO_STEP_DELAY_MS);
+  }
 
   Serial.print("Lift -> ");
   Serial.print(liftAngle);
@@ -39,7 +59,14 @@ void attachPickAndPlace() {
     Serial.println("Lift servo attach failed on A0.");
   }
 
-  liftTo(LIFT_UP_ANGLE);
+  // Send the boot position once; liftTo() would skip the write because
+  // liftAngle already starts at the up angle.
+  liftAngle = LIFT_UP_ANGLE;
+  liftServo.write(liftAngle);
+
+  Serial.print("Lift -> ");
+  Serial.print(liftAngle);
+  Serial.println(" deg");
 }
 
 int liftAngleNow() {
@@ -58,13 +85,13 @@ static void runPickAndPlace() {
   setMagnet(false);
 
   liftTo(LIFT_DOWN_ANGLE);
-  delay(LIFT_SETTLE_MS);
+  wifiServiceDelay(LIFT_SETTLE_MS);
 
   setMagnet(true);
-  delay(MAGNET_PICK_MS);
+  wifiServiceDelay(MAGNET_PICK_MS);
 
   liftTo(LIFT_UP_ANGLE);
-  delay(LIFT_SETTLE_MS);
+  wifiServiceDelay(LIFT_SETTLE_MS);
 
   int placeAngle = PLACE_ANGLE;
 
@@ -72,16 +99,16 @@ static void runPickAndPlace() {
   if (placeAngle > SERVO_MAX_ANGLE) placeAngle = SERVO_MAX_ANGLE;
 
   moveServo(placeAngle);
-  delay(PICK_MOVE_SETTLE_MS);
+  wifiServiceDelay(PICK_MOVE_SETTLE_MS);
 
   liftTo(LIFT_DOWN_ANGLE);
-  delay(LIFT_SETTLE_MS);
+  wifiServiceDelay(LIFT_SETTLE_MS);
 
   setMagnet(false);
-  delay(MAGNET_DROP_MS);
+  wifiServiceDelay(MAGNET_DROP_MS);
 
   liftTo(LIFT_UP_ANGLE);
-  delay(LIFT_SETTLE_MS);
+  wifiServiceDelay(LIFT_SETTLE_MS);
 
   Serial.println("PICK/PLACE DONE");
 }
