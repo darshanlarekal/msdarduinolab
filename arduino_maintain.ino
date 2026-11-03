@@ -7,6 +7,7 @@
 #include "menu.h"
 #include "modes.h"
 #include "servo_arm.h"
+#include "wifi_control.h"
 
 void setup() {
   Serial.begin(115200);
@@ -25,9 +26,12 @@ void setup() {
   Serial.println("Sensing averages 50 LDR samples per light.");
 
   printMenuPrompt();
+  wifiControlBegin();
 }
 
 void loop() {
+  wifiControlPoll();
+
   if (mode == MODE_MENU) {
     handleMenuInput();
   }

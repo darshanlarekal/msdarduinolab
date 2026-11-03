@@ -6,6 +6,9 @@ extern int displayedColor;  // WHITE
 extern int candidateColor;
 extern int stableCount;
 
+// Most recent detector reading, for status reporting.
+extern float lastLdrReading;
+
 // Switch into detection mode and reset the detector state.
 void startDetection(const char* source);
 

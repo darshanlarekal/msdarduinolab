@@ -17,6 +17,10 @@ void attachServo() {
   m2Servo.write(servoAngle);
 }
 
+int servoAngleNow() {
+  return servoAngle;
+}
+
 // Moves the arm without logging, used inside the sweep.
 static void writeServo(int angle) {
   servoAngle = angle;

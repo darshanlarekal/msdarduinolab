@@ -13,6 +13,7 @@
 int displayedColor = 0;  // WHITE
 int candidateColor = -1;
 int stableCount = 0;
+float lastLdrReading = 0;
 
 void startDetection(const char* source) {
   mode = MODE_DETECTION;
@@ -21,6 +22,7 @@ void startDetection(const char* source) {
   displayedColor = 0;
   candidateColor = -1;
   stableCount = 0;
+  lastLdrReading = 0;
 
   showColor(displayedColor);
 
@@ -62,6 +64,7 @@ void runDetection() {
 
   // LED stays on in its current color during measurement.
   float reading = readAverageLDR();
+  lastLdrReading = reading;
   int detected = classifyReading(reading);
 
   if (detected == candidateColor) {

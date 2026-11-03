@@ -11,6 +11,28 @@ static char commandBuffer[CMD_BUF_SIZE];
 static int commandLength = 0;
 static unsigned long lastCharMs = 0;
 
+static char pendingCommand[CMD_BUF_SIZE];
+static bool hasPendingCommand = false;
+
+bool submitCommand(const char* token) {
+  if (hasPendingCommand || token == NULL) return false;
+
+  size_t length = strlen(token);
+
+  if (length == 0 || length >= CMD_BUF_SIZE) return false;
+
+  for (size_t i = 0; i < length; i++) {
+    if (isspace((unsigned char)token[i])) return false;
+
+    pendingCommand[i] = (char)tolower((unsigned char)token[i]);
+  }
+
+  pendingCommand[length] = '\0';
+  hasPendingCommand = true;
+
+  return true;
+}
+
 static bool finishCommand() {
   commandBuffer[commandLength] = '\0';
 
@@ -22,6 +44,14 @@ static bool finishCommand() {
 }
 
 bool readCommand() {
+  // Do not overwrite a partially typed serial command. Network commands
+  // wait until the serial buffer is empty.
+  if (hasPendingCommand && commandLength == 0) {
+    strcpy(commandBuffer, pendingCommand);
+    hasPendingCommand = false;
+    return true;
+  }
+
   while (Serial.available() > 0) {
     int character = Serial.read();
 
