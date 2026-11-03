@@ -7,6 +7,7 @@
 #include "command_input.h"
 #include "detection.h"
 #include "modes.h"
+#include "pick_place.h"
 #include "servo_arm.h"
 
 Mode mode = MODE_MENU;
@@ -19,6 +20,7 @@ void printMenuPrompt() {
   Serial.println("Servo at M2: g/b/r/w = find that color");
   Serial.println("  a = jog left, d = jog right, or type an angle to jump there");
   Serial.println("  k = show limits, v = scan and print what the LDR sees");
+  Serial.println("Lift at A0: u = up, l = lower, m = magnet, p = pick/place");
 }
 
 void handleMenuInput() {
@@ -40,6 +42,9 @@ void handleMenuInput() {
     startDetection("the old saved values");
   }
   else if (handleServoUtilityCommand()) {
+    // Handled above.
+  }
+  else if (handlePickPlaceCommand()) {
     // Handled above.
   }
   else if (seekForCommand()) {
@@ -67,6 +72,10 @@ void handleCalibrationInput() {
   // Jog, angle jump, limits and scan all work without leaving
   // calibration, so the arm can be positioned over each strip.
   if (handleServoUtilityCommand()) {
+    return;
+  }
+
+  if (handlePickPlaceCommand()) {
     return;
   }
 

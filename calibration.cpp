@@ -118,6 +118,7 @@ void printPrompt() {
   Serial.println("Place the LDR over a strip:");
   Serial.println("  < / > = jog left/right, or type an angle to jump");
   Serial.println("  k = show limits, v = scan what the LDR sees");
+  Serial.println("  u/l = lift up/down, m = magnet, p = pick/place");
   Serial.println("Enter strip color: w, b, g, or r");
   Serial.println("Type x to print all results.");
   Serial.println("Type t to start detection.");

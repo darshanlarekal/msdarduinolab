@@ -10,6 +10,7 @@
 #include "config.h"
 #include "detection.h"
 #include "modes.h"
+#include "pick_place.h"
 #include "servo_arm.h"
 
 #include "arduino_secrets.h"
@@ -110,6 +111,10 @@ static void sendStatus(WiFiClient& client) {
 
   client.print("\",\"ldr\":");
   client.print(lastLdrReading, 2);
+  client.print(",\"lift\":");
+  client.print(liftAngleNow());
+  client.print(",\"magnet\":");
+  client.print(magnetIsOn() ? "true" : "false");
   client.println("}");
   client.flush();
   client.stop();
@@ -186,6 +191,12 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 <input id="angle" type="number" min="0" max="120" value="90">
 <button onclick="cmd(document.getElementById('angle').value)">Go</button>
 
+<h2>Lift / magnet</h2>
+<button onclick="cmd('u')">Lift up</button>
+<button onclick="cmd('l')">Lift down</button>
+<button onclick="cmd('m')">Magnet toggle</button>
+<button onclick="cmd('p')">Pick &amp; place</button>
+
 <h2>Calibration</h2>
 <button onclick="cmd('w')">Cal W</button>
 <button onclick="cmd('b')">Cal B</button>
@@ -224,7 +235,8 @@ async function refresh() {
     document.getElementById('status').textContent =
       j.mode + ' | angle ' + j.angle + ' deg | strips ' + j.strips +
       ' | LED ' + j.displayed + ' | candidate ' + j.candidate +
-      ' | LDR ' + j.ldr;
+      ' | LDR ' + j.ldr + ' | lift ' + j.lift +
+      ' | magnet ' + (j.magnet ? 'ON' : 'OFF');
   } catch (e) {
   }
 }

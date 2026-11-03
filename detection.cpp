@@ -7,6 +7,7 @@
 #include "config.h"
 #include "menu.h"
 #include "modes.h"
+#include "pick_place.h"
 #include "sensing.h"
 #include "servo_arm.h"
 
@@ -35,6 +36,7 @@ void startDetection(const char* source) {
   Serial.println("Send c for the menu, x for the values in use.");
   Serial.println("Servo at M2: g/b/r/w = find that color");
   Serial.println("  a/d = jog, number = jump to that angle, v = scan");
+  Serial.println("Lift at A0: u = up, l = lower, m = magnet, p = pick/place");
 }
 
 void runDetection() {
@@ -54,6 +56,10 @@ void runDetection() {
     }
 
     if (handleServoUtilityCommand()) {
+      return;
+    }
+
+    if (handlePickPlaceCommand()) {
       return;
     }
 

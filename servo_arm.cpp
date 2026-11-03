@@ -27,7 +27,7 @@ static void writeServo(int angle) {
   m2Servo.write(servoAngle);
 }
 
-static void moveServo(int angle) {
+void moveServo(int angle) {
   writeServo(angle);
 
   Serial.print("Servo -> ");

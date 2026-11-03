@@ -2,6 +2,9 @@
 
 void attachServo();
 
+// Move the M2 arm to an angle and log it.
+void moveServo(int angle);
+
 // Current commanded angle, for status reporting.
 int servoAngleNow();
 

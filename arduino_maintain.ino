@@ -6,6 +6,7 @@
 #include "detection.h"
 #include "menu.h"
 #include "modes.h"
+#include "pick_place.h"
 #include "servo_arm.h"
 #include "wifi_control.h"
 
@@ -20,6 +21,7 @@ void setup() {
   turnOffRGB();
   loadOldValues();
   attachServo();
+  attachPickAndPlace();
 
   Serial.println("RGB + LDR CALIBRATION + COLOR DETECTOR");
   Serial.println("Arduino Uno R4 WiFi");

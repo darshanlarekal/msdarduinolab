@@ -34,6 +34,28 @@ const int JOG_STEP_DEG = 4;
 // "nothing under the sensor" instead of the closest color.
 const float SEEK_MAX_MATCH_DISTANCE = 150.0f;
 
+// -------- LIFT / PICK (A0) --------
+// Up/down servo signal on A0. Power the servo from 5V/GND, not from A0.
+const int LIFT_SERVO_PIN = A0;
+
+// Electromagnet driver on D12 (MOSFET/relay; do not drive the coil directly).
+const int MAGNET_PIN = 12;
+const bool MAGNET_ACTIVE_HIGH = true;
+
+// Tune these two after testing: swap them if the lift moves the wrong way.
+const int LIFT_UP_ANGLE = 90;
+const int LIFT_DOWN_ANGLE = 0;
+const int LIFT_MIN_ANGLE = 0;
+const int LIFT_MAX_ANGLE = 180;
+
+// M2 destination after the object is picked up.
+const int PLACE_ANGLE = 90;
+
+const unsigned long LIFT_SETTLE_MS = 500;
+const unsigned long PICK_MOVE_SETTLE_MS = 500;
+const unsigned long MAGNET_PICK_MS = 300;
+const unsigned long MAGNET_DROP_MS = 300;
+
 // -------- DETECTOR SETTINGS --------
 const int SAMPLES = 20;
 const int REQUIRED_STABLE_SCANS = 3;
