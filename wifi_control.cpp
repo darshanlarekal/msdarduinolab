@@ -15,13 +15,16 @@
 #include "arduino_secrets.h"
 
 static const unsigned long WIFI_RETRY_MS = 10000;
+static const unsigned long WIFI_IP_TIMEOUT_MS = 15000;
 static const unsigned long HTTP_TIMEOUT_MS = 800;
 
 static WiFiServer httpServer(80);
 
 static bool wifiEnabled = false;
 static bool serverStarted = false;
+static bool waitingForIpPrinted = false;
 static unsigned long lastWifiAttemptMs = 0;
+static unsigned long connectedSinceMs = 0;
 
 static const char* modeName() {
   switch (mode) {
@@ -347,6 +350,9 @@ void wifiControlPoll() {
       Serial.println("WiFi: disconnected.");
     }
 
+    waitingForIpPrinted = false;
+    connectedSinceMs = 0;
+
     if (millis() - lastWifiAttemptMs >= WIFI_RETRY_MS) {
       lastWifiAttemptMs = millis();
 
@@ -359,12 +365,43 @@ void wifiControlPoll() {
     return;
   }
 
+  IPAddress ip = WiFi.localIP();
+
+  // The module can report WL_CONNECTED before DHCP has handed out an
+  // address. Do not start the server on 0.0.0.0.
+  if ((uint32_t)ip == 0) {
+    if (serverStarted) {
+      httpServer.end();
+      serverStarted = false;
+    }
+
+    if (!waitingForIpPrinted) {
+      waitingForIpPrinted = true;
+      connectedSinceMs = millis();
+      Serial.println("WiFi: connected, waiting for an IP address...");
+    }
+
+    if (millis() - connectedSinceMs >= WIFI_IP_TIMEOUT_MS) {
+      Serial.println("WiFi: no IP address, reconnecting...");
+
+      waitingForIpPrinted = false;
+      connectedSinceMs = 0;
+      lastWifiAttemptMs = millis();
+
+      WiFi.disconnect();
+      WiFi.begin(SECRET_SSID, SECRET_PASS);
+    }
+
+    return;
+  }
+
   if (!serverStarted) {
     httpServer.begin();
     serverStarted = true;
+    waitingForIpPrinted = false;
 
     Serial.print("WiFi: open http://");
-    Serial.println(WiFi.localIP());
+    Serial.println(ip);
   }
 
   handleHttpClient();
