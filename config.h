@@ -44,11 +44,11 @@ const int LIFT_SERVO_PIN = A0;
 const int MAGNET_PIN = 12;
 const bool MAGNET_ACTIVE_HIGH = true;
 
-// Tune these two after testing: swap them if the lift moves the wrong way.
-const int LIFT_UP_ANGLE = 90;
-const int LIFT_DOWN_ANGLE = 0;
-const int LIFT_MIN_ANGLE = 0;
-const int LIFT_MAX_ANGLE = 180;
+// Measured mechanical limits: 24 deg is down, 54 deg is up.
+const int LIFT_DOWN_ANGLE = 24;
+const int LIFT_UP_ANGLE = 54;
+const int LIFT_MIN_ANGLE = LIFT_DOWN_ANGLE;
+const int LIFT_MAX_ANGLE = LIFT_UP_ANGLE;
 const int LIFT_FINE_JOG_DEG = 3;
 
 // M2 destination after the object is picked up.

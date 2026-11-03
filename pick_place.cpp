@@ -24,12 +24,8 @@ static void liftTo(int angle) {
   if (angle < LIFT_MIN_ANGLE) angle = LIFT_MIN_ANGLE;
   if (angle > LIFT_MAX_ANGLE) angle = LIFT_MAX_ANGLE;
 
-  // Keep every commanded position on the 5-degree grid.
-  angle = ((angle + SERVO_STEP_DEG / 2) / SERVO_STEP_DEG) * SERVO_STEP_DEG;
-
-  if (angle < LIFT_MIN_ANGLE) angle = LIFT_MIN_ANGLE;
-  if (angle > LIFT_MAX_ANGLE) angle = LIFT_MAX_ANGLE;
-
+  // Step by 5 degrees, but finish exactly on the target so the measured
+  // limits (24 and 54) are not rounded away.
   while (liftAngle != angle) {
     int next;
 
