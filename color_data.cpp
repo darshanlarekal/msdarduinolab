@@ -7,10 +7,10 @@
 
 // Boot defaults. These live in flash and are loaded by setup().
 const ColorData defaultColors[] = {
-  {"WHITE", 514.04, 513.72, 468.86, 424.24},
-  {"GREEN", 838.00, 831.50, 765.96, 737.00},
-  {"RED",   702.64, 756.08, 726.56, 653.74},
-  {"BLUE",  785.72, 781.34, 758.02, 725.12}
+  {"WHITE", 532.54, 547.10, 490.02, 442.82},
+  {"GREEN", 835.46, 834.04, 756.88, 725.46},
+  {"RED",   754.56, 806.42, 784.76, 713.64},
+  {"BLUE",  822.54, 821.76, 809.80, 775.26}
 };
 
 // Earlier calibration set, kept for reference:
