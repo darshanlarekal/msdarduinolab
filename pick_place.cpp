@@ -13,6 +13,7 @@
 static Servo liftServo;
 static int liftAngle = LIFT_UP_ANGLE;
 static bool magnetOn = false;
+static bool liftAttached = false;
 
 static void setMagnet(bool on) {
   magnetOn = on;
@@ -22,7 +23,25 @@ static void setMagnet(bool on) {
   Serial.println(on ? "ON" : "OFF");
 }
 
+// Attach the lift only when it first needs to move. Attaching at boot
+// makes the servo jump to the library default on every reset.
+static bool ensureLiftAttached() {
+  if (liftAttached) return true;
+
+  if (liftServo.attach(LIFT_SERVO_PIN) == 0) {
+    Serial.println("Lift servo attach failed on A0.");
+    return false;
+  }
+
+  digitalWrite(LIFT_SERVO_PIN, LOW);
+  liftServo.write(liftAngle);
+  liftAttached = true;
+  return true;
+}
+
 static void liftTo(int angle) {
+  if (!ensureLiftAttached()) return;
+
   if (angle < LIFT_MIN_ANGLE) angle = LIFT_MIN_ANGLE;
   if (angle > LIFT_MAX_ANGLE) angle = LIFT_MAX_ANGLE;
 
@@ -49,22 +68,14 @@ static void liftTo(int angle) {
   Serial.println(" deg");
 }
 
-void attachPickAndPlace() {
+void initPickAndPlace() {
   pinMode(MAGNET_PIN, OUTPUT);
   setMagnet(false);
 
-  if (liftServo.attach(LIFT_SERVO_PIN) == 0) {
-    Serial.println("Lift servo attach failed on A0.");
-  }
-
-  // Send the boot position once; liftTo() would skip the write because
-  // liftAngle already starts at the up angle.
+  // Do not attach or write the lift servo here. It attaches on the first
+  // actual movement command, so flashing/resetting does not move it.
   liftAngle = LIFT_UP_ANGLE;
-  liftServo.write(liftAngle);
-
-  Serial.print("Lift -> ");
-  Serial.print(liftAngle);
-  Serial.println(" deg");
+  liftAttached = false;
 }
 
 int liftAngleNow() {
@@ -101,6 +112,10 @@ static void performPickAndPlace(int sourceAngle, int destAngle) {
   wifiServiceDelay(LIFT_SETTLE_MS);
 
   moveServo(destAngle);
+
+  // The lift must stay up for the whole trip. Reassert it after the arm
+  // reaches the destination, then lower only at the destination angle.
+  liftTo(LIFT_UP_ANGLE);
   wifiServiceDelay(PICK_MOVE_SETTLE_MS);
 
   liftTo(LIFT_DOWN_ANGLE);
@@ -118,6 +133,14 @@ static void performPickAndPlace(int sourceAngle, int destAngle) {
 // Pick at the current M2 position and place at PLACE_ANGLE.
 static void runPickAndPlace() {
   performPickAndPlace(servoAngleNow(), PLACE_ANGLE);
+}
+
+// Same 5-degree rounding moveServo() applies.
+static int servoGridAngle(int angle) {
+  if (angle < SERVO_MIN_ANGLE) angle = SERVO_MIN_ANGLE;
+  if (angle > SERVO_MAX_ANGLE) angle = SERVO_MAX_ANGLE;
+
+  return ((angle + SERVO_STEP_DEG / 2) / SERVO_STEP_DEG) * SERVO_STEP_DEG;
 }
 
 // Commands look like "pickwr": pick white, place red.
@@ -189,10 +212,17 @@ static void runPickAndPlaceBetween(int sourceIndex, int destIndex) {
   Serial.print(destAngle);
   Serial.println(" deg");
 
+  if (servoGridAngle(sourceAngle) == servoGridAngle(destAngle)) {
+    Serial.println("Source and destination resolve to the same servo position. Aborting.");
+    return;
+  }
+
   performPickAndPlace(sourceAngle, destAngle);
 }
 
 static void liftJog(int delta) {
+  if (!ensureLiftAttached()) return;
+
   int next = liftAngle + delta;
 
   if (next < LIFT_MIN_ANGLE) next = LIFT_MIN_ANGLE;

@@ -20,8 +20,8 @@ void setup() {
 
   turnOffRGB();
   loadOldValues();
-  attachServo();
-  attachPickAndPlace();
+  initServo();
+  initPickAndPlace();
 
   Serial.println("RGB + LDR CALIBRATION + COLOR DETECTOR");
   Serial.println("Arduino Uno R4 WiFi");
