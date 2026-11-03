@@ -49,6 +49,7 @@ const int LIFT_UP_ANGLE = 90;
 const int LIFT_DOWN_ANGLE = 0;
 const int LIFT_MIN_ANGLE = 0;
 const int LIFT_MAX_ANGLE = 180;
+const int LIFT_FINE_JOG_DEG = 3;
 
 // M2 destination after the object is picked up.
 const int PLACE_ANGLE = 90;

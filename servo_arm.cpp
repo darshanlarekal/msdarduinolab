@@ -185,12 +185,12 @@ bool handleServoUtilityCommand() {
     return true;
   }
 
-  if (isCommand("left", 'a') || isCommand("<", '<') || isCommand("-", '-')) {
+  if (isCommand("left", 'a') || isCommand("<", '<')) {
     jogServo(-JOG_STEP_DEG);
     return true;
   }
 
-  if (isCommand("right", 'd') || isCommand(">", '>') || isCommand("+", '+')) {
+  if (isCommand("right", 'd') || isCommand(">", '>')) {
     jogServo(JOG_STEP_DEG);
     return true;
   }

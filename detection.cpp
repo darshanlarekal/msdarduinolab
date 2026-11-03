@@ -37,6 +37,7 @@ void startDetection(const char* source) {
   Serial.println("Servo at M2: g/b/r/w = find that color");
   Serial.println("  a/d = jog, number = jump to that angle, v = scan");
   Serial.println("Lift at A0: u = up, l = lower, m = magnet, p = pick/place");
+  Serial.println("Fine lift: + / - = 3 deg up/down");
 }
 
 void runDetection() {

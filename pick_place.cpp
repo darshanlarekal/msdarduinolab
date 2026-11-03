@@ -113,6 +113,28 @@ static void runPickAndPlace() {
   Serial.println("PICK/PLACE DONE");
 }
 
+static void liftJog(int delta) {
+  int next = liftAngle + delta;
+
+  if (next < LIFT_MIN_ANGLE) next = LIFT_MIN_ANGLE;
+  if (next > LIFT_MAX_ANGLE) next = LIFT_MAX_ANGLE;
+
+  if (next == liftAngle) {
+    Serial.print("Lift at limit: ");
+    Serial.print(liftAngle);
+    Serial.println(" deg");
+    return;
+  }
+
+  liftAngle = next;
+  liftServo.write(liftAngle);
+  wifiServiceDelay(SERVO_STEP_DELAY_MS);
+
+  Serial.print("Lift -> ");
+  Serial.print(liftAngle);
+  Serial.println(" deg");
+}
+
 bool handlePickPlaceCommand() {
   if (isCommand("up", 'u')) {
     liftTo(LIFT_UP_ANGLE);
@@ -121,6 +143,16 @@ bool handlePickPlaceCommand() {
 
   if (isCommand("lower", 'l')) {
     liftTo(LIFT_DOWN_ANGLE);
+    return true;
+  }
+
+  if (isCommand("+", '+')) {
+    liftJog(LIFT_FINE_JOG_DEG);
+    return true;
+  }
+
+  if (isCommand("-", '-')) {
+    liftJog(-LIFT_FINE_JOG_DEG);
     return true;
   }
 

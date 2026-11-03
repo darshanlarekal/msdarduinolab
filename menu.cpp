@@ -21,6 +21,7 @@ void printMenuPrompt() {
   Serial.println("  a = jog left, d = jog right, or type an angle to jump there");
   Serial.println("  k = show limits, v = scan and print what the LDR sees");
   Serial.println("Lift at A0: u = up, l = lower, m = magnet, p = pick/place");
+  Serial.println("Fine lift: + / - = 3 deg up/down");
 }
 
 void handleMenuInput() {

@@ -194,6 +194,8 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 <h2>Lift / magnet</h2>
 <button onclick="cmd('u')">Lift up</button>
 <button onclick="cmd('l')">Lift down</button>
+<button onclick="cmd('+')">Lift +3</button>
+<button onclick="cmd('-')">Lift -3</button>
 <button onclick="cmd('m')">Magnet toggle</button>
 <button onclick="cmd('p')">Pick &amp; place</button>
 
