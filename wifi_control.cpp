@@ -193,10 +193,10 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 <button onclick="cmd(document.getElementById('angle').value)">Go</button>
 
 <h2>Lift / magnet</h2>
-<button onclick="cmd('u')">Lift up</button>
-<button onclick="cmd('l')">Lift down</button>
-<button onclick="cmd('+')">Lift +3</button>
-<button onclick="cmd('-')">Lift -3</button>
+<button onclick="cmd('u')">Lift up (24&deg;)</button>
+<button onclick="cmd('l')">Lift down (54&deg;)</button>
+<button onclick="cmd('+')">Up +3&deg;</button>
+<button onclick="cmd('-')">Down -3&deg;</button>
 <button onclick="cmd('m')">Magnet toggle</button>
 <button onclick="cmd('p')">Pick here, place at 90&deg;</button>
 

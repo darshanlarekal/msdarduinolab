@@ -220,10 +220,11 @@ static void runPickAndPlaceBetween(int sourceIndex, int destIndex) {
   performPickAndPlace(sourceAngle, destAngle);
 }
 
+// delta > 0 moves the lift up (toward 24 deg); delta < 0 moves it down.
 static void liftJog(int delta) {
   if (!ensureLiftAttached()) return;
 
-  int next = liftAngle + delta;
+  int next = liftAngle - delta;
 
   if (next < LIFT_MIN_ANGLE) next = LIFT_MIN_ANGLE;
   if (next > LIFT_MAX_ANGLE) next = LIFT_MAX_ANGLE;
