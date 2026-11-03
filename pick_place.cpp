@@ -2,7 +2,9 @@
 
 #include <Arduino.h>
 #include <Servo.h>
+#include <string.h>
 
+#include "color_data.h"
 #include "command_input.h"
 #include "config.h"
 #include "servo_arm.h"
@@ -73,12 +75,21 @@ bool magnetIsOn() {
   return magnetOn;
 }
 
-// Pick at the current M2 position, lift, rotate M2 to PLACE_ANGLE,
-// lower, release, then raise again.
-static void runPickAndPlace() {
-  Serial.println("PICK/PLACE START");
+// Move to the source angle, pick, move to the destination angle,
+// release, then raise again.
+static void performPickAndPlace(int sourceAngle, int destAngle) {
+  Serial.print("PICK/PLACE START: source ");
+  Serial.print(sourceAngle);
+  Serial.print(" deg, destination ");
+  Serial.print(destAngle);
+  Serial.println(" deg");
 
   setMagnet(false);
+
+  if (servoAngleNow() != sourceAngle) {
+    moveServo(sourceAngle);
+    wifiServiceDelay(PICK_MOVE_SETTLE_MS);
+  }
 
   liftTo(LIFT_DOWN_ANGLE);
   wifiServiceDelay(LIFT_SETTLE_MS);
@@ -89,12 +100,7 @@ static void runPickAndPlace() {
   liftTo(LIFT_UP_ANGLE);
   wifiServiceDelay(LIFT_SETTLE_MS);
 
-  int placeAngle = PLACE_ANGLE;
-
-  if (placeAngle < SERVO_MIN_ANGLE) placeAngle = SERVO_MIN_ANGLE;
-  if (placeAngle > SERVO_MAX_ANGLE) placeAngle = SERVO_MAX_ANGLE;
-
-  moveServo(placeAngle);
+  moveServo(destAngle);
   wifiServiceDelay(PICK_MOVE_SETTLE_MS);
 
   liftTo(LIFT_DOWN_ANGLE);
@@ -107,6 +113,83 @@ static void runPickAndPlace() {
   wifiServiceDelay(LIFT_SETTLE_MS);
 
   Serial.println("PICK/PLACE DONE");
+}
+
+// Pick at the current M2 position and place at PLACE_ANGLE.
+static void runPickAndPlace() {
+  performPickAndPlace(servoAngleNow(), PLACE_ANGLE);
+}
+
+// Commands look like "pickwr": pick white, place red.
+// Color letters are w, g, r, b.
+static bool parsePickPair(int& sourceIndex, int& destIndex) {
+  const char* token = currentCommand();
+
+  if (strncmp(token, "pick", 4) != 0) return false;
+  if (token[4] == '\0' || token[5] == '\0' || token[6] != '\0') return false;
+
+  int source = stripIndexFor(token[4]);
+  int dest = stripIndexFor(token[5]);
+
+  if (source < 0 || dest < 0) return false;
+
+  sourceIndex = source;
+  destIndex = dest;
+  return true;
+}
+
+// Find both colors before picking up anything, so a missing destination
+// aborts without carrying an object across the table.
+static void runPickAndPlaceBetween(int sourceIndex, int destIndex) {
+  Serial.print("COLOR PICK/PLACE: ");
+  Serial.print(colors[sourceIndex].name);
+  Serial.print(" -> ");
+  Serial.println(colors[destIndex].name);
+
+  setMagnet(false);
+  liftTo(LIFT_UP_ANGLE);
+  wifiServiceDelay(LIFT_SETTLE_MS);
+
+  setRGB(255, 255, 255);
+  wifiServiceDelay(SEEK_SETTLE_MS);
+
+  Serial.print("Seeking source ");
+  Serial.print(colors[sourceIndex].name);
+  Serial.println("...");
+
+  int sourceAngle = seekColor(sourceIndex);
+
+  if (sourceAngle < 0) {
+    Serial.print("No ");
+    Serial.print(colors[sourceIndex].name);
+    Serial.println(" found for pickup. Aborting.");
+    return;
+  }
+
+  Serial.print(colors[sourceIndex].name);
+  Serial.print(" source at ");
+  Serial.print(sourceAngle);
+  Serial.println(" deg");
+
+  Serial.print("Seeking destination ");
+  Serial.print(colors[destIndex].name);
+  Serial.println("...");
+
+  int destAngle = seekColor(destIndex);
+
+  if (destAngle < 0) {
+    Serial.print("No ");
+    Serial.print(colors[destIndex].name);
+    Serial.println(" found for drop-off. Aborting before pickup.");
+    return;
+  }
+
+  Serial.print(colors[destIndex].name);
+  Serial.print(" destination at ");
+  Serial.print(destAngle);
+  Serial.println(" deg");
+
+  performPickAndPlace(sourceAngle, destAngle);
 }
 
 static void liftJog(int delta) {
@@ -154,6 +237,14 @@ bool handlePickPlaceCommand() {
 
   if (isCommand("magnet", 'm')) {
     setMagnet(!magnetOn);
+    return true;
+  }
+
+  int sourceIndex;
+  int destIndex;
+
+  if (parsePickPair(sourceIndex, destIndex)) {
+    runPickAndPlaceBetween(sourceIndex, destIndex);
     return true;
   }
 

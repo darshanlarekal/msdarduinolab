@@ -95,6 +95,10 @@ bool isNumberToken() {
   return true;
 }
 
+const char* currentCommand() {
+  return commandBuffer;
+}
+
 int commandNumber() {
   return atoi(commandBuffer);
 }

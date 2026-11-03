@@ -170,6 +170,7 @@ body{font-family:system-ui,sans-serif;margin:1rem;max-width:42rem}
 h1{font-size:1.4rem}
 h2{font-size:1rem;margin:1rem 0 .4rem}
 button{margin:.15rem;padding:.5rem .7rem;font-size:1rem}
+select{padding:.45rem;font-size:1rem}
 input{padding:.45rem;font-size:1rem;width:5rem}
 pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 </style>
@@ -197,7 +198,26 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 <button onclick="cmd('+')">Lift +3</button>
 <button onclick="cmd('-')">Lift -3</button>
 <button onclick="cmd('m')">Magnet toggle</button>
-<button onclick="cmd('p')">Pick &amp; place</button>
+<button onclick="cmd('p')">Pick here, place at 90&deg;</button>
+
+<h2>Pick color &rarr; place color</h2>
+<label>Pick from
+<select id="sourceColor">
+<option value="w">White</option>
+<option value="g">Green</option>
+<option value="r">Red</option>
+<option value="b">Blue</option>
+</select>
+</label>
+<label>Place at
+<select id="destColor">
+<option value="w">White</option>
+<option value="g">Green</option>
+<option value="r" selected>Red</option>
+<option value="b">Blue</option>
+</select>
+</label>
+<button onclick="pickBetween()">Find and move</button>
 
 <h2>Calibration</h2>
 <button onclick="cmd('w')">Cal W</button>
@@ -219,6 +239,11 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 <button onclick="cmd(document.getElementById('raw').value);document.getElementById('raw').value=''">Send</button>
 
 <script>
+function pickBetween() {
+  const from = document.getElementById('sourceColor').value;
+  const to = document.getElementById('destColor').value;
+  cmd('pick' + from + to);
+}
 async function cmd(c) {
   if (!c) return;
   try {

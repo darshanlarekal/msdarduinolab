@@ -134,10 +134,17 @@ static void scanReport() {
 
 // Sweeps the arm and returns the middle of the first run of angles
 // where the LDR sees the requested strip, or -1 when it never does.
-static int seekColor(int targetIndex) {
+int seekColor(int targetIndex) {
   int firstMatch = -1;
   int lastMatch = -1;
   int consecutiveHits = 0;
+
+  // A sweep starts at SERVO_MIN_ANGLE. Walk there slowly instead of
+  // jumping when a previous seek left the arm at the far end.
+  if (servoAngle != SERVO_MIN_ANGLE) {
+    moveServo(SERVO_MIN_ANGLE);
+    wifiServiceDelay(SEEK_SETTLE_MS);
+  }
 
   for (int angle = SERVO_MIN_ANGLE;
        angle <= SERVO_MAX_ANGLE;
