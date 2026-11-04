@@ -1,7 +1,9 @@
 #include "menu.h"
 
 #include <Arduino.h>
+#include <string.h>
 
+#include "assignment_flow.h"
 #include "calibration.h"
 #include "color_data.h"
 #include "command_input.h"
@@ -14,9 +16,14 @@ Mode mode = MODE_MENU;
 
 void printMenuPrompt() {
   Serial.println();
-  Serial.println("Choose how to get calibration values:");
-  Serial.println("  s = sense/calibrate strips now");
-  Serial.println("  o = reuse the old saved values");
+  Serial.println("White-patch RGB calibration:");
+  Serial.println("  man  = manual: adjust the three pots");
+  Serial.println("  auto = automatic LED balancing");
+  Serial.println("  none = use current/default calibration");
+  Serial.println();
+  Serial.println("Legacy options:");
+  Serial.println("  s = sense/calibrate four strips");
+  Serial.println("  o = reuse old values and start detection");
   Serial.println("Servo at M2: g/b/r/w = find that color");
   Serial.println("  a = jog left, d = jog right, or type an angle to jump there");
   Serial.println("  k = show limits, v = scan and print what the LDR sees");
@@ -26,6 +33,26 @@ void printMenuPrompt() {
 
 void handleMenuInput() {
   if (!readCommand()) return;
+
+  const char* token = currentCommand();
+
+  if (strcmp(token, "man") == 0) {
+    runCalibrationFlow(true, false);
+    printMenuPrompt();
+    return;
+  }
+
+  if (strcmp(token, "auto") == 0) {
+    runCalibrationFlow(false, true);
+    printMenuPrompt();
+    return;
+  }
+
+  if (strcmp(token, "none") == 0) {
+    runCalibrationFlow(false, false);
+    printMenuPrompt();
+    return;
+  }
 
   if (isCommand("sense", 's')) {
     // Start a fresh sensing run from the old saved values.

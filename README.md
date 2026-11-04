@@ -15,12 +15,15 @@ table.
 ## Features
 
 - Three modes: menu, calibration, and continuous detection.
+- White-patch RGB calibration with manual pot adjustment or automatic LED balancing.
 - Four-color calibration under red, blue, green, and white LED light.
 - Automatic color detection with stable-reading filtering.
+- 16x2 LCD status display (parallel or I2C).
+- Object-sensor-assisted lift and a five-second electromagnet pickup.
+- Color-to-color assignment flow: prompt for calibration, sweep the base, prompt for pickup/drop colors, then run one cycle.
 - 5-degree M2 servo movement, with 3-degree fine lift jogging.
 - Measured mechanical limits for both servos.
 - Electromagnet pick-and-place with configurable settle times.
-- Color-to-color operation: pick from color X, place at color Y.
 - Web UI and JSON status endpoint over Wi-Fi.
 - Serial control fallback when Wi-Fi is not configured or unavailable.
 - Servos are not attached or driven at reset, so flashing the board does not
@@ -37,6 +40,9 @@ table.
 | M2 servo signal | `D6` | Board silk marks the M2 header as `6 / + / -`; DIP switch 8 connects D6 to M2. |
 | Lift servo signal | `A0` | A0 is used as a digital servo output. Power the servo from 5 V and GND, not from A0. |
 | Electromagnet driver | `D12` | Active high. MOSFET or relay driver; never drive the coil directly from a pin. |
+| Object sensor | `D5` | IR/object sensor input. Active low by default; adjust `OBJECT_SENSOR_ACTIVE_LOW`. |
+| LCD RS/E/D4-D7 | `D2`, `D3`, `D4`, `D7`, `D8`, `D13` | Default parallel 16x2 LCD wiring. Change `LCD_*_PIN` or set `LCD_USE_I2C` to `1` for an I2C backpack. |
+| LCD I2C SDA/SCL | `A4`/`A5` | Used only when `LCD_USE_I2C` is `1`. Set `LCD_I2C_ADDRESS` for the backpack. |
 
 ### Power and grounding
 
@@ -69,7 +75,10 @@ constants in `config.h`.
 | `calibration.cpp/.h` | Four-light strip calibration and result printing. |
 | `sensing.cpp/.h` | LDR averaging and classification. |
 | `servo_arm.cpp/.h` | M2 servo movement, color sweeps, jogging, limits, and scan report. |
-| `pick_place.cpp/.h` | Lift servo, magnet, fixed pick/place, and color-to-color pick/place. |
+| `pick_place.cpp/.h` | Lift servo, magnet, object sensor, fixed pick/place, and color-to-color pick/place. |
+| `rgb_calibration.cpp/.h` | White-patch manual/automatic RGB calibration, classification, sweep, and color search. |
+| `assignment_flow.cpp/.h` | Calibration choice, pickup/drop color prompts, and the assignment pick/place cycle. |
+| `lcd_display.cpp/.h` | Parallel/I2C 16x2 LCD output. |
 | `detection.cpp/.h` | Continuous color detection and detection-mode commands. |
 | `command_input.cpp/.h` | Serial and queued-command input. |
 | `wifi_control.cpp/.h` | Wi-Fi connection, HTTP server, web UI, and `/status` JSON. |
@@ -82,7 +91,9 @@ constants in `config.h`.
 ### Arduino IDE
 
 1. Install the **Arduino UNO R4 Boards** core.
-2. Install the **Servo** library from Library Manager.
+2. Install the **Servo** and **LiquidCrystal** libraries from Library Manager.
+   The LiquidCrystal library is only needed for the default parallel LCD;
+   the I2C backpack mode uses the built-in `Wire` library.
 3. Copy the secrets template:
 
    ```sh
@@ -98,7 +109,7 @@ constants in `config.h`.
 
 ```sh
 arduino-cli core install arduino:renesas_uno
-arduino-cli lib install Servo
+arduino-cli lib install Servo LiquidCrystal
 
 cd ~/Arduino
 arduino-cli compile --fqbn arduino:renesas_uno:unor4wifi arduino_maintain
@@ -131,8 +142,11 @@ Serial keys:
 
 | Key | Action |
 |---|---|
-| `s` | Load defaults and enter calibration mode. |
-| `o` | Load the compile-time defaults and start detection. |
+| `man` | Manual white-patch calibration: adjust the RGB pots, then type `1`. |
+| `auto` | Autocalibrate the white patch by dimming the brighter LED channels. |
+| `none` | Use the current/default RGB calibration, sweep the base, and start the pick/drop flow. |
+| `s` | Legacy: load defaults and enter the four-strip calibration mode. |
+| `o` | Legacy: load the compile-time defaults and start detection. |
 | `a` / `d` or `<` / `>` | Jog M2 by 5 degrees. |
 | A number | Move M2 directly to that angle (clamped to `0..120`). |
 | `k` | Print M2 travel limits and current position. |
@@ -144,7 +158,31 @@ Serial keys:
 | `p` | Pick at the current M2 position; place at `PLACE_ANGLE` (`90`). |
 | `pickwr`-style token | Pick from the first color letter, place at the second. |
 
-### Calibration mode
+### White-patch RGB calibration and assignment flow
+
+At the menu, choose `man`, `auto`, or `none`:
+
+1. The lift rises to `24` degrees.
+2. `man` moves M2 to `WHITE_PATCH_ANGLE` (default `90`) and repeatedly shows
+   raw R/G/B readings plus the maximum. Turn the two brighter-channel
+   potentiometers until the three readings match, then type `1`.
+3. `auto` moves M2 to the white patch, measures all three channels at full
+   LED, and dims the brighter channels until their LDR readings match the
+   dimmest channel.
+4. `none` keeps the current values (or the compile-time defaults).
+5. The firmware sweeps M2 across the base and displays R/G/B plus the detected
+   color on the LCD and serial output.
+6. Enter the pickup color and then the drop color (`w`, `g`, `r`, `b`).
+7. The arm finds the pickup color, lowers until the object sensor triggers,
+   turns the magnet on for `MAGNET_PICK_MS` (5000 ms), and retracts.
+8. It then searches for the drop color, lowers, releases the magnet, retracts,
+   and returns to the calibration prompt.
+
+The object sensor is on `D5` and is active low by default. If it never
+triggers, the arm continues to the down limit so the cycle still completes;
+set `OBJECT_SENSOR_ACTIVE_LOW` to match the module.
+
+### Legacy four-strip calibration mode
 
 Enter with `s` from menu mode.
 
@@ -183,6 +221,12 @@ prints the reading, candidate color, and displayed color to serial.
 | `x` / `values` | Print the current detector table. |
 | M2 movement keys | Jog, jump, limits, scan, or seek a color. |
 | Lift/magnet/pick keys | Same as menu mode. |
+
+## Assignment flow commands
+
+The `man`, `auto`, and `none` menu commands run the white-patch calibration and
+pickup/drop prompt flow described above. This is separate from the legacy
+`pickXY` token below, which pre-searches the destination before pickup.
 
 ## Color-to-color pick and place
 
@@ -304,10 +348,10 @@ If Wi-Fi is unavailable, serial control still works.
 Column order is **red light, blue light, green light, white light**. The
 `WHITE` row is also the initial displayed color and the home row for detection.
 
-Runtime calibration updates the live `colors[]` table in RAM only. It is not
-saved to EEPROM or flash. After a reset, the compile-time defaults are loaded
-again. To make a calibration permanent, update `defaultColors` in
-`color_data.cpp` and re-upload.
+Runtime calibration updates the live `colors[]` table in RAM only. The
+white-patch RGB levels and references are also RAM-only. After a reset, the
+compile-time defaults are loaded again. To make a calibration permanent,
+update `defaultColors` in `color_data.cpp` and re-upload.
 
 `o` from the menu restores these defaults and starts detection.
 
@@ -335,14 +379,18 @@ These values are in `config.h` if the environment needs different timing.
 | Web command returns `409 Conflict` | Another command is already waiting in the queue. Wait for it to be consumed, then send the next one. |
 | Servos twitch or the board resets during motion | Use a stronger separate 5 V servo supply and a common ground. |
 | Magnet does not actuate | Check the MOSFET/relay, external coil supply, flyback diode, and `MAGNET_ACTIVE_HIGH`. |
-| Calibration disappears after reset | Expected: runtime calibration is RAM-only. Update `defaultColors` for a permanent default. |
+| Calibration disappears after reset | Expected: both the four-strip table and white-patch RGB calibration are RAM-only. Update `defaultColors` or `RGB_DEFAULT_WHITE` for a permanent default. |
+| LCD stays blank | Check the `LCD_USE_I2C` setting, the `LCD_*_PIN` values, and the I2C address. Parallel mode needs the `LiquidCrystal` library. |
+| Object sensor triggers at the wrong point | Check `OBJECT_SENSOR_PIN`, `OBJECT_SENSOR_ACTIVE_LOW`, and the module output polarity. |
 | Color pick/place aborts | The source or destination color was not found, or both resolved to the same 5-degree M2 position. Check `x`, `v`, and the calibration table. |
 
 ## Configuration quick reference
 
 Most behavior is controlled from `config.h`:
 
-- pin assignments;
+- pin assignments, including LCD and object sensor pins;
+- `LCD_USE_I2C` and the I2C address;
+- white-patch angle and RGB calibration timing/tolerance;
 - M2 travel and lift travel limits;
 - servo step size and delay;
 - color sweep samples and settle times;
@@ -350,5 +398,7 @@ Most behavior is controlled from `config.h`:
 - magnet timings;
 - command buffer size and idle timeout.
 
-Color values live in `color_data.cpp`. Calibration and detection logic live in
-`sensing.cpp`, `calibration.cpp`, and `detection.cpp`.
+Color values live in `color_data.cpp`. Four-strip calibration and detection
+logic live in `sensing.cpp`, `calibration.cpp`, and `detection.cpp`.
+White-patch RGB calibration and color search live in `rgb_calibration.cpp`.
+The assignment flow lives in `assignment_flow.cpp`.

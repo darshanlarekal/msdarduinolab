@@ -15,7 +15,7 @@ static int liftAngle = LIFT_UP_ANGLE;
 static bool magnetOn = false;
 static bool liftAttached = false;
 
-static void setMagnet(bool on) {
+void setMagnet(bool on) {
   magnetOn = on;
   digitalWrite(MAGNET_PIN, on == MAGNET_ACTIVE_HIGH ? HIGH : LOW);
 
@@ -39,8 +39,8 @@ static bool ensureLiftAttached() {
   return true;
 }
 
-static void liftTo(int angle) {
-  if (!ensureLiftAttached()) return;
+bool liftTo(int angle) {
+  if (!ensureLiftAttached()) return false;
 
   if (angle < LIFT_MIN_ANGLE) angle = LIFT_MIN_ANGLE;
   if (angle > LIFT_MAX_ANGLE) angle = LIFT_MAX_ANGLE;
@@ -66,10 +66,12 @@ static void liftTo(int angle) {
   Serial.print("Lift -> ");
   Serial.print(liftAngle);
   Serial.println(" deg");
+  return true;
 }
 
 void initPickAndPlace() {
   pinMode(MAGNET_PIN, OUTPUT);
+  pinMode(OBJECT_SENSOR_PIN, INPUT_PULLUP);
   setMagnet(false);
 
   // Do not attach or write the lift servo here. It attaches on the first
@@ -84,6 +86,43 @@ int liftAngleNow() {
 
 bool magnetIsOn() {
   return magnetOn;
+}
+
+bool objectDetected() {
+  int state = digitalRead(OBJECT_SENSOR_PIN);
+
+  if (OBJECT_SENSOR_ACTIVE_LOW) {
+    return state == LOW;
+  }
+
+  return state == HIGH;
+}
+
+bool lowerUntilObject() {
+  if (!liftTo(LIFT_UP_ANGLE)) return false;
+
+  if (objectDetected()) {
+    Serial.println("Object already sensed at the up position.");
+    return true;
+  }
+
+  for (int angle = LIFT_UP_ANGLE;
+       angle <= LIFT_DOWN_ANGLE;
+       angle += SERVO_STEP_DEG) {
+
+    if (!liftTo(angle)) return false;
+    wifiServiceDelay(OBJECT_SETTLE_MS);
+
+    if (objectDetected()) {
+      Serial.print("Object sensed at lift ");
+      Serial.print(angle);
+      Serial.println(" deg.");
+      return true;
+    }
+  }
+
+  Serial.println("Object sensor did not trigger; using down limit.");
+  return false;
 }
 
 // Move to the source angle, pick, move to the destination angle,
