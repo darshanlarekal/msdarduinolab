@@ -71,7 +71,9 @@ bool liftTo(int angle) {
 
 void initPickAndPlace() {
   pinMode(MAGNET_PIN, OUTPUT);
-  pinMode(OBJECT_SENSOR_PIN, INPUT_PULLUP);
+  if (OBJECT_SENSOR_ENABLED) {
+    pinMode(OBJECT_SENSOR_PIN, INPUT_PULLUP);
+  }
   setMagnet(false);
 
   // Do not attach or write the lift servo here. It attaches on the first
@@ -89,6 +91,8 @@ bool magnetIsOn() {
 }
 
 bool objectDetected() {
+  if (!OBJECT_SENSOR_ENABLED) return false;
+
   int state = digitalRead(OBJECT_SENSOR_PIN);
 
   if (OBJECT_SENSOR_ACTIVE_LOW) {
@@ -99,6 +103,12 @@ bool objectDetected() {
 }
 
 bool lowerUntilObject() {
+  if (!OBJECT_SENSOR_ENABLED) {
+    Serial.println("Object sensor disabled; lowering to down limit.");
+    liftTo(LIFT_DOWN_ANGLE);
+    return false;
+  }
+
   if (!liftTo(LIFT_UP_ANGLE)) return false;
 
   if (objectDetected()) {

@@ -16,7 +16,8 @@ void setMagnet(bool on);
 bool objectDetected();
 
 // Lower the lift from the up position until the object sensor triggers or
-// the down limit is reached. Returns true if the sensor triggered.
+// the down limit is reached. Returns true if the sensor triggered. When
+// OBJECT_SENSOR_ENABLED is false, it lowers to the down limit and returns false.
 bool lowerUntilObject();
 
 int liftAngleNow();

@@ -60,6 +60,8 @@ const float SEEK_MAX_MATCH_DISTANCE = 150.0f;
 const int LIFT_SERVO_PIN = A0;
 
 // IR object sensor on M1 / D5. The module used in ir_test is active low.
+// Disabled until the sensor is fitted; the lowering code remains in place.
+const bool OBJECT_SENSOR_ENABLED = false;
 const int OBJECT_SENSOR_PIN = 5;
 const bool OBJECT_SENSOR_ACTIVE_LOW = true;
 const unsigned long OBJECT_SETTLE_MS = 100;
