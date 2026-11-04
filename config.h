@@ -59,16 +59,22 @@ const float SEEK_MAX_MATCH_DISTANCE = 150.0f;
 // Up/down servo signal on A0. Power the servo from 5V/GND, not from A0.
 const int LIFT_SERVO_PIN = A0;
 
-// IR object sensor on M1 / D5. The module used in ir_test is active low.
-// Disabled until the sensor is fitted; the lowering code remains in place.
+// Optional IR object sensor. Disabled; its code remains in place.
+// M1/D5 is now used by the magnet, so choose another pin before enabling it.
 const bool OBJECT_SENSOR_ENABLED = false;
 const int OBJECT_SENSOR_PIN = 5;
 const bool OBJECT_SENSOR_ACTIVE_LOW = true;
 const unsigned long OBJECT_SETTLE_MS = 100;
 
-// Electromagnet driver on D12 (MOSFET/relay; do not drive the coil directly).
-const int MAGNET_PIN = 12;
-const bool MAGNET_ACTIVE_HIGH = true;
+// Electromagnet driver on M1 / D5 (MOSFET/relay; do not drive the coil directly).
+const int MAGNET_PIN = 5;
+const bool MAGNET_ACTIVE_HIGH = false;
+
+// The magnet and the optional object sensor cannot share M1/D5.
+static_assert(
+  !OBJECT_SENSOR_ENABLED || OBJECT_SENSOR_PIN != MAGNET_PIN,
+  "OBJECT_SENSOR_PIN must differ from MAGNET_PIN"
+);
 
 // Measured mechanical limits: 24 deg is fully up, 54 deg is fully down.
 const int LIFT_UP_ANGLE = 24;
