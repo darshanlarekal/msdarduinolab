@@ -39,8 +39,8 @@ table.
 | RGB LED - blue | `D11` | PWM output. |
 | M2 servo signal | `D6` | Board silk marks the M2 header as `6 / + / -`; DIP switch 8 connects D6 to M2. |
 | Lift servo signal | `A0` | A0 is used as a digital servo output. Power the servo from 5 V and GND, not from A0. |
-| Electromagnet driver | `D5` / M1 | Active high. M1 signal pin. MOSFET or relay driver; never drive the coil directly from a pin. |
-| Object sensor | unused | Optional IR/object sensor input, disabled by default. `D5` is used by the magnet on M1; assign a free pin before enabling it, and adjust `OBJECT_SENSOR_ACTIVE_LOW`. |
+| Electromagnet driver | `D7` | Active low. MOSFET or relay driver; never drive the coil directly from a pin. D7 is also the parallel LCD D5 pin, so use I2C LCD or reassign a pin if both are fitted. |
+| Object sensor | `D5` | Optional IR/object sensor input, disabled by default. D5 is free again after moving the magnet to D7; set `OBJECT_SENSOR_ENABLED` and adjust polarity when fitted. |
 | LCD RS/E/D4-D7 | `D2`, `D3`, `D4`, `D7`, `D8`, `D13` | Default parallel 16x2 LCD wiring. Change `LCD_*_PIN` or set `LCD_USE_I2C` to `1` for an I2C backpack. |
 | LCD I2C SDA/SCL | `A4`/`A5` | Used only when `LCD_USE_I2C` is `1`. Set `LCD_I2C_ADDRESS` for the backpack. |
 
@@ -196,10 +196,10 @@ pressing `auto`.
 
 The object sensor is **disabled by default** (`OBJECT_SENSOR_ENABLED = false`)
 because it is not required for the current setup. Its lowering/checking code
-remains in place. `D5`/M1 is now the magnet output, so assign a different pin
-to `OBJECT_SENSOR_PIN` before enabling it; the firmware has a compile-time
-guard against sharing the pin. If the sensor never triggers, the arm continues
-to the down limit so the cycle still completes.
+remains in place. The magnet is now on D7, so D5 is free for the optional
+sensor; the firmware still has a compile-time guard against sharing a pin. If
+the sensor never triggers, the arm continues to the down limit so the cycle
+still completes.
 
 ### Legacy four-strip calibration mode
 
@@ -420,7 +420,7 @@ These values are in `config.h` if the environment needs different timing.
 | Magnet does not actuate | Check the MOSFET/relay, external coil supply, flyback diode, and `MAGNET_ACTIVE_HIGH`. |
 | Calibration disappears after reset | Expected: both the four-strip table and white-patch RGB calibration are RAM-only. Update `defaultColors` or `RGB_DEFAULT_WHITE` for a permanent default. |
 | LCD stays blank | Check the `LCD_USE_I2C` setting, the `LCD_*_PIN` values, and the I2C address. Parallel mode needs the `LiquidCrystal` library. |
-| Object sensor has no effect | It is disabled by default. `D5` is the magnet now; assign a different `OBJECT_SENSOR_PIN` before enabling, then check polarity. |
+| Object sensor has no effect | It is disabled by default. Enable it and check `OBJECT_SENSOR_PIN`, `OBJECT_SENSOR_ACTIVE_LOW`, and module polarity. |
 | Color pick/place aborts | The source or destination color was not found, or both resolved to the same 5-degree M2 position. Check `x`, `v`, and the calibration table. |
 | Auto calibration just moves 5 degrees and flashes light | That is the post-calibration color sweep, not the white-balance step. Wait for `Base sweep done`, then send pickup and drop colors. Make sure the LDR is over the white patch at `85` before pressing `auto`. |
 | Every sweep angle says `WHITE` | Auto calibrated against the wrong/dark surface. Put the LDR exactly over the white patch at `85`, keep all three pots at minimum resistance, and rerun `auto`. Check the printed `White average`; a very high target also prints the dark-white warning. |

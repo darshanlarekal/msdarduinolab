@@ -60,17 +60,19 @@ const float SEEK_MAX_MATCH_DISTANCE = 150.0f;
 const int LIFT_SERVO_PIN = A0;
 
 // Optional IR object sensor. Disabled; its code remains in place.
-// M1/D5 is now used by the magnet, so choose another pin before enabling it.
+// The magnet now uses D7, so D5 is available if the object sensor is fitted.
 const bool OBJECT_SENSOR_ENABLED = false;
 const int OBJECT_SENSOR_PIN = 5;
 const bool OBJECT_SENSOR_ACTIVE_LOW = true;
 const unsigned long OBJECT_SETTLE_MS = 100;
 
-// Electromagnet driver on M1 / D5 (MOSFET/relay; do not drive the coil directly).
-const int MAGNET_PIN = 5;
+// Electromagnet driver on D7 (MOSFET/relay; do not drive the coil directly).
+// Active low. D7 is also LCD_D5_PIN in parallel LCD mode; use I2C LCD or
+// move one of the pins before using both.
+const int MAGNET_PIN = 7;
 const bool MAGNET_ACTIVE_HIGH = false;
 
-// The magnet and the optional object sensor cannot share M1/D5.
+// The magnet and the optional object sensor must not share a pin.
 static_assert(
   !OBJECT_SENSOR_ENABLED || OBJECT_SENSOR_PIN != MAGNET_PIN,
   "OBJECT_SENSOR_PIN must differ from MAGNET_PIN"
