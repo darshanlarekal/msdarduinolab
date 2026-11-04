@@ -326,22 +326,42 @@ int classifyRgb(float red, float green, float blue) {
     whiteAverage = RGB_DEFAULT_WHITE;
   }
 
-  float maximum = maximumOf(red, green, blue);
   float minimum = minimumOf(red, green, blue);
 
   // A very high reading means very little reflected light: no object.
-  if (minimum > whiteAverage * RGB_DARK_RATIO) {
+  // Clamp the threshold so a high white reading cannot put "none" above
+  // the ADC's 1023 limit.
+  float darkThreshold = whiteAverage * RGB_DARK_RATIO;
+  if (darkThreshold > RGB_DARK_LEVEL) {
+    darkThreshold = RGB_DARK_LEVEL;
+  }
+
+  if (minimum >= darkThreshold) {
     return -1;
   }
 
+  // Normalize each channel to its white-patch reading. This keeps the
+  // white/color decision meaningful even when the three white readings
+  // are not exactly equal.
+  float whiteRed = rgbWhiteRed > 1.0f ? rgbWhiteRed : 1.0f;
+  float whiteGreen = rgbWhiteGreen > 1.0f ? rgbWhiteGreen : 1.0f;
+  float whiteBlue = rgbWhiteBlue > 1.0f ? rgbWhiteBlue : 1.0f;
+
+  float redRatio = red / whiteRed;
+  float greenRatio = green / whiteGreen;
+  float blueRatio = blue / whiteBlue;
+
+  float maximumRatio = maximumOf(redRatio, greenRatio, blueRatio);
+  float minimumRatio = minimumOf(redRatio, greenRatio, blueRatio);
+
   // White reflects all three channels almost equally.
-  if ((maximum - minimum) <= whiteAverage * RGB_WHITE_SPREAD_RATIO) {
+  if ((maximumRatio - minimumRatio) <= RGB_WHITE_SPREAD_RATIO) {
     return 0;
   }
 
-  // The brightest reflection has the lowest LDR reading.
-  if (minimum == red) return 2;
-  if (minimum == green) return 1;
+  // The brightest reflection has the lowest normalized LDR reading.
+  if (minimumRatio == redRatio) return 2;
+  if (minimumRatio == greenRatio) return 1;
   return 3;
 }
 

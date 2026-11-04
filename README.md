@@ -396,6 +396,9 @@ update `defaultColors` in `color_data.cpp` and re-upload.
 - Calibration averages 50 LDR readings per light after a 200 ms settle.
 - Detection averages 20 readings per scan.
 - A detected color must match for 3 consecutive scans before the LED changes.
+- The RGB white/color classifier normalizes each reading to its white-patch
+  reference and uses a 5% normalized spread limit, with a dark cutoff capped
+  at 950 ADC counts.
 - A reading farther than `SEEK_MAX_MATCH_DISTANCE` from every row during a
   white-light color sweep is treated as "nothing" rather than the closest
   color.
