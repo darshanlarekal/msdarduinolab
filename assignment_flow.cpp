@@ -12,6 +12,12 @@
 #include "rgb_calibration.h"
 #include "wifi_control.h"
 
+static const char* assignmentPrompt = "READY";
+
+const char* assignmentPromptText() {
+  return assignmentPrompt;
+}
+
 static int colorIndexFromToken(const char* token) {
   if (token == NULL || token[0] == '\0') return -1;
 
@@ -28,6 +34,7 @@ static int colorIndexFromToken(const char* token) {
 }
 
 static int promptColor(const char* label) {
+  assignmentPrompt = label;
   lcdShowMessage(label, "w/g/r/b  c=EXIT");
   Serial.println();
   Serial.print(label);
@@ -64,6 +71,7 @@ static void runPickDropFlow() {
       continue;
     }
 
+    assignmentPrompt = "FIND PICKUP";
     if (!liftTo(LIFT_UP_ANGLE)) {
       Serial.println("Lift servo unavailable; aborting.");
       return;
@@ -75,6 +83,7 @@ static void runPickDropFlow() {
       continue;
     }
 
+    assignmentPrompt = "LOWER / PICK";
     bool objectSensed = lowerUntilObject();
     if (!objectSensed) {
       Serial.println("Continuing to pickup at the down limit.");
@@ -91,6 +100,7 @@ static void runPickDropFlow() {
       return;
     }
 
+    assignmentPrompt = "FIND DROP";
     int destinationAngle = 0;
     if (!findRgbColor(destination, destinationAngle)) {
       setMagnet(false);
@@ -98,6 +108,7 @@ static void runPickDropFlow() {
       continue;
     }
 
+    assignmentPrompt = "LOWER / DROP";
     if (!liftTo(LIFT_DOWN_ANGLE)) {
       setMagnet(false);
       return;
@@ -109,18 +120,24 @@ static void runPickDropFlow() {
     liftTo(LIFT_UP_ANGLE);
 
     Serial.println("Pick-and-place cycle complete.");
+    assignmentPrompt = "MENU";
     return;
   }
 }
 
 void runCalibrationFlow(bool manual, bool automatic) {
   mode = MODE_CALIBRATION;
+  assignmentPrompt = "LIFT UP";
   liftTo(LIFT_UP_ANGLE);
 
   if (manual) {
+    assignmentPrompt = "MANUAL CAL";
+    Serial.println("Manual RGB calibration: place the LDR over the white patch at WHITE_PATCH_ANGLE.");
     ManualCalibrate();
   }
   else if (automatic) {
+    assignmentPrompt = "AUTO CAL";
+    Serial.println("Auto RGB calibration: place the LDR over the white patch at WHITE_PATCH_ANGLE.");
     AutoCalibrate();
   }
   else {
@@ -128,7 +145,14 @@ void runCalibrationFlow(bool manual, bool automatic) {
     Serial.println("Using the current or default RGB calibration.");
   }
 
+  assignmentPrompt = "BASE SWEEP";
+  Serial.println("Calibration phase done. The arm does not know color locations yet;");
+  Serial.println("it will now sweep 0..120 deg and classify each angle from reflected R/G/B.");
   sweepAndDisplayRgb();
+
+  assignmentPrompt = "CHOOSE COLORS";
+  Serial.println("Base sweep done. Next: enter the pickup color, then the drop color.");
   runPickDropFlow();
+  assignmentPrompt = "MENU";
   mode = MODE_MENU;
 }

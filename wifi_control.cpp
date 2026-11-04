@@ -4,6 +4,7 @@
 #include <WiFiS3.h>
 #include <string.h>
 
+#include "assignment_flow.h"
 #include "calibration.h"
 #include "color_data.h"
 #include "command_input.h"
@@ -96,6 +97,8 @@ static void sendStatus(WiFiClient& client) {
 
   client.print("{\"mode\":\"");
   client.print(modeName());
+  client.print("\",\"prompt\":\"");
+  client.print(assignmentPromptText());
   client.print("\",\"m2\":");
   client.print(servoAngleNow());
   client.print(",\"strips\":");
@@ -281,6 +284,7 @@ async function refresh() {
     const j = await r.json();
     document.getElementById('status').textContent =
       'Mode: ' + j.mode +
+      '\nPrompt: ' + (j.prompt || '') +
       '\nM2 servo: ' + j.m2 + ' deg' +
       '\nLift servo: ' + j.lift + ' deg' +
       '\nCalibrated strips: ' + j.strips +

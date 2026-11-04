@@ -160,7 +160,13 @@ Serial keys:
 
 ### White-patch RGB calibration and assignment flow
 
-At the menu, choose `man`, `auto`, or `none`:
+At the menu, choose `man`, `auto`, or `none`.
+
+Important: auto calibration does **not** know where red, green, or blue are
+before it starts. It only balances the white patch. The color scan happens
+afterward; the arm classifies each angle from the reflected R/G/B readings.
+Place the LDR over the white patch at `WHITE_PATCH_ANGLE` (default `90`) before
+pressing `auto`.
 
 1. The lift rises to `24` degrees.
 2. `man` moves M2 to `WHITE_PATCH_ANGLE` (default `90`) and repeatedly shows
@@ -168,11 +174,19 @@ At the menu, choose `man`, `auto`, or `none`:
    potentiometers until the three readings match, then type `1`.
 3. `auto` moves M2 to the white patch, measures all three channels at full
    LED, and dims the brighter channels until their LDR readings match the
-   dimmest channel.
+   dimmest channel. This step does not store color positions.
 4. `none` keeps the current values (or the compile-time defaults).
-5. The firmware sweeps M2 across the base and displays R/G/B plus the detected
-   color on the LCD and serial output.
+5. The firmware sweeps M2 across the base in 5-degree steps and displays
+   R/G/B plus the detected color on the LCD and serial output. The arm is
+   scanning here; it is not calibrating anymore. Wait for
+   `Base sweep done` and the pickup-color prompt. A color is classified by
+   which channel reflects most strongly: its LDR reading is the lowest. A red
+   object reflects red best, so its red reading is lowest; green and blue work
+   the same way. Roughly equal readings are white; very dark readings are
+   `NONE`.
 6. Enter the pickup color and then the drop color (`w`, `g`, `r`, `b`).
+   On the web page, use the **Pickup W/G/R/B** buttons first, then the
+   **Drop W/G/R/B** buttons.
 7. The arm finds the pickup color and lowers. With the object sensor enabled,
    lowering stops when the sensor triggers; while it is disabled, the arm goes
    to the down limit. It then turns the magnet on for `MAGNET_PICK_MS`
@@ -313,12 +327,15 @@ The page provides:
 - M2 jog, angle jumps, limits, and scan;
 - lift up/down, fine jog, magnet toggle, and fixed pick/place;
 - legacy color-to-color pre-search pick/place dropdowns;
-- live status: mode, M2 angle, lift angle, calibrated strip count, LED color,
-  candidate color, LDR reading, and magnet state.
+- live status: mode, current assignment prompt, M2 angle, lift angle,
+  calibrated strip count, LED color, candidate color, LDR reading, and magnet
+  state.
 
 For the RGB assignment flow, use the buttons in order: start calibration,
-finish manual (if manual), then send the pickup color followed by the drop
-color. The firmware prints the RGB readings and detected color on the LCD and
+finish manual (if manual), wait for the 5-degree color sweep to finish, then
+send the pickup color followed by the drop color. The status **Prompt** line
+shows phases such as `AUTO CAL`, `BASE SWEEP`, `PICK-UP COLOR`, `DROP COLOR`,
+`FIND PICKUP`, and `FIND DROP`. The firmware prints the RGB readings and detected color on the LCD and
 serial monitor while it sweeps. The legacy **Legacy four-strip calibration**
 buttons still use the old strip table; use **Menu** first when switching
 workflows.
@@ -402,6 +419,7 @@ These values are in `config.h` if the environment needs different timing.
 | LCD stays blank | Check the `LCD_USE_I2C` setting, the `LCD_*_PIN` values, and the I2C address. Parallel mode needs the `LiquidCrystal` library. |
 | Object sensor has no effect | It is disabled by default. Set `OBJECT_SENSOR_ENABLED = true`; then check `OBJECT_SENSOR_PIN`, `OBJECT_SENSOR_ACTIVE_LOW`, and the module output polarity. |
 | Color pick/place aborts | The source or destination color was not found, or both resolved to the same 5-degree M2 position. Check `x`, `v`, and the calibration table. |
+| Auto calibration just moves 5 degrees and flashes light | That is the post-calibration color sweep, not the white-balance step. Wait for `Base sweep done`, then send pickup and drop colors. Make sure the LDR is over the white patch at `90` before pressing `auto`. |
 
 ## Configuration quick reference
 
