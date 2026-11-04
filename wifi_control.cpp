@@ -9,6 +9,7 @@
 #include "command_input.h"
 #include "config.h"
 #include "detection.h"
+#include "lcd_display.h"
 #include "modes.h"
 #include "pick_place.h"
 #include "servo_arm.h"
@@ -395,6 +396,7 @@ void wifiControlBegin() {
   wifiEnabled = true;
   lastWifiAttemptMs = millis();
 
+  Serial.println("WiFi: starting; the IP address will print when assigned.");
   Serial.print("WiFi: connecting to ");
   Serial.println(SECRET_SSID);
 
@@ -460,8 +462,18 @@ void wifiControlPoll() {
     serverStarted = true;
     waitingForIpPrinted = false;
 
-    Serial.print("WiFi: open http://");
+    Serial.println();
+    Serial.println("=== WEB CONTROL READY ===");
+    Serial.print("WiFi IP: ");
     Serial.println(ip);
+    Serial.print("URL: http://");
+    Serial.println(ip);
+    Serial.println("========================");
+
+    if (mode == MODE_MENU) {
+      String ipText = ip.toString();
+      lcdShowMessage("WEB UI", ipText.c_str());
+    }
   }
 
   handleHttpClient();

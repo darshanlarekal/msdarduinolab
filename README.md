@@ -291,10 +291,14 @@ The board connects to the configured Wi-Fi network as a station. When it gets
 an IP address, the serial monitor prints:
 
 ```text
-WiFi: open http://192.168.x.x
+=== WEB CONTROL READY ===
+WiFi IP: 192.168.x.x
+URL: http://192.168.x.x
+========================
 ```
 
-Open that address in a browser.
+The same IP appears on the LCD as `WEB UI` / `192.168.x.x` when the board
+connects at boot. Open the URL in a browser.
 
 The page provides:
 
