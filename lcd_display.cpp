@@ -6,6 +6,20 @@
 
 #include "config.h"
 
+#if !LCD_ENABLED
+
+// LCD output is temporarily disabled; keep the call sites compiling without
+// touching any LCD pins. Re-enable with LCD_ENABLED in config.h.
+void lcdBegin() {}
+void lcdClear() {}
+void lcdSetCursor(int, int) {}
+void lcdPrint(const char*) {}
+void lcdShowMessage(const char*, const char*) {}
+void lcdShowRgb(float, float, float, const char*) {}
+void lcdShowCalibration(float, float, float) {}
+
+#else
+
 #if LCD_USE_I2C
 
 #include <Wire.h>
@@ -177,3 +191,5 @@ void lcdShowCalibration(float red, float green, float blue) {
   );
   lcdWriteLine(1, line);
 }
+
+#endif

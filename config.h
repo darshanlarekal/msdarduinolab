@@ -9,6 +9,9 @@ const int GREEN_PIN = 10;
 const int BLUE_PIN = 11;
 
 // -------- LCD --------
+// Temporarily disabled while the LCD wiring is undecided. The LCD module
+// remains in the project; set this to 1 to enable it again.
+#define LCD_ENABLED 0
 // 0 = parallel 16x2 LCD, 1 = PCF8574 I2C backpack (SDA A4, SCL A5).
 // The parallel pins below are defaults only; change them to match the
 // actual wiring. D5 is reserved for the object sensor.
@@ -71,6 +74,13 @@ const unsigned long OBJECT_SETTLE_MS = 100;
 // move one of the pins before using both.
 const int MAGNET_PIN = 7;
 const bool MAGNET_ACTIVE_HIGH = false;
+
+// A parallel LCD D5 would fight the magnet on D7. This only matters when
+// LCD_ENABLED is turned back on.
+static_assert(
+  !LCD_ENABLED || LCD_USE_I2C || LCD_D5_PIN != MAGNET_PIN,
+  "Parallel LCD_D5_PIN must differ from MAGNET_PIN"
+);
 
 // The magnet and the optional object sensor must not share a pin.
 static_assert(

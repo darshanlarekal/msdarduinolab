@@ -18,7 +18,7 @@ table.
 - White-patch RGB calibration with manual pot adjustment or automatic LED balancing.
 - Four-color calibration under red, blue, green, and white LED light.
 - Automatic color detection with stable-reading filtering.
-- 16x2 LCD status display (parallel or I2C).
+- Optional 16x2 LCD status display, currently disabled with `LCD_ENABLED = 0` while the wiring is undecided.
 - Optional object-sensor-assisted lift (disabled in `config.h` until fitted) and a five-second electromagnet pickup.
 - Color-to-color assignment flow: prompt for calibration, sweep the base, prompt for pickup/drop colors, then run one cycle.
 - 5-degree M2 servo movement, with 3-degree fine lift jogging.
@@ -41,8 +41,8 @@ table.
 | Lift servo signal | `A0` | A0 is used as a digital servo output. Power the servo from 5 V and GND, not from A0. |
 | Electromagnet driver | `D7` | Active low. MOSFET or relay driver; never drive the coil directly from a pin. D7 is also the parallel LCD D5 pin, so use I2C LCD or reassign a pin if both are fitted. |
 | Object sensor | `D5` | Optional IR/object sensor input, disabled by default. D5 is free again after moving the magnet to D7; set `OBJECT_SENSOR_ENABLED` and adjust polarity when fitted. |
-| LCD RS/E/D4-D7 | `D2`, `D3`, `D4`, `D7`, `D8`, `D13` | Default parallel 16x2 LCD wiring. Change `LCD_*_PIN` or set `LCD_USE_I2C` to `1` for an I2C backpack. |
-| LCD I2C SDA/SCL | `A4`/`A5` | Used only when `LCD_USE_I2C` is `1`. Set `LCD_I2C_ADDRESS` for the backpack. |
+| LCD RS/E/D4-D7 | `D2`, `D3`, `D4`, `D7`, `D8`, `D13` | Default parallel wiring, currently disabled. **D7 is the magnet now**, so parallel LCD mode is not usable until one pin is moved. |
+| LCD I2C SDA/SCL | `A4`/`A5` | Use `LCD_ENABLED = 1` and `LCD_USE_I2C = 1` for an I2C backpack; set `LCD_I2C_ADDRESS`. |
 
 ### Power and grounding
 
@@ -177,7 +177,8 @@ pressing `auto`.
    dimmest channel. This step does not store color positions.
 4. `none` keeps the current values (or the compile-time defaults).
 5. The firmware sweeps M2 across the base in 5-degree steps and displays
-   R/G/B plus the detected color on the LCD and serial output. The arm is
+   R/G/B plus the detected color on the serial output; when the LCD is enabled,
+   it also shows R/G/B and the color. The arm is
    scanning here; it is not calibrating anymore. Wait for
    `Base sweep done` and the pickup-color prompt. A color is classified by
    which channel reflects most strongly: its LDR reading is the lowest. A red
@@ -311,8 +312,8 @@ URL: http://192.168.x.x
 ========================
 ```
 
-The same IP appears on the LCD as `WEB UI` / `192.168.x.x` when the board
-connects at boot. Open the URL in a browser.
+When `LCD_ENABLED` is turned back on, the same IP appears on the LCD as
+`WEB UI` / `192.168.x.x`. Open the URL in a browser.
 
 The page provides:
 
@@ -336,9 +337,9 @@ finish manual (if manual), wait for the 5-degree color sweep to finish, then
 send the pickup color followed by the drop color. The status **Prompt** line
 shows phases such as `AUTO CAL`, `BASE SWEEP`, `PICK-UP COLOR`, `DROP COLOR`,
 `FIND PICKUP`, and `FIND DROP`. The firmware prints the RGB readings and detected color on the LCD and
-serial monitor while it sweeps. The legacy **Legacy four-strip calibration**
-buttons still use the old strip table; use **Menu** first when switching
-workflows.
+serial monitor while it sweeps; LCD output appears only when enabled. The
+legacy four-strip calibration buttons still use the old strip table; use
+**Menu** first when switching workflows.
 
 ### HTTP endpoints
 
@@ -419,7 +420,7 @@ These values are in `config.h` if the environment needs different timing.
 | Servos twitch or the board resets during motion | Use a stronger separate 5 V servo supply and a common ground. |
 | Magnet does not actuate | Check the MOSFET/relay, external coil supply, flyback diode, and `MAGNET_ACTIVE_HIGH`. |
 | Calibration disappears after reset | Expected: both the four-strip table and white-patch RGB calibration are RAM-only. Update `defaultColors` or `RGB_DEFAULT_WHITE` for a permanent default. |
-| LCD stays blank | Check the `LCD_USE_I2C` setting, the `LCD_*_PIN` values, and the I2C address. Parallel mode needs the `LiquidCrystal` library. |
+| LCD stays blank | Expected while `LCD_ENABLED = 0`. To enable it, set it to `1`, choose I2C or reassign the parallel pins away from D7, and install `LiquidCrystal` for parallel mode. |
 | Object sensor has no effect | It is disabled by default. Enable it and check `OBJECT_SENSOR_PIN`, `OBJECT_SENSOR_ACTIVE_LOW`, and module polarity. |
 | Color pick/place aborts | The source or destination color was not found, or both resolved to the same 5-degree M2 position. Check `x`, `v`, and the calibration table. |
 | Auto calibration just moves 5 degrees and flashes light | That is the post-calibration color sweep, not the white-balance step. Wait for `Base sweep done`, then send pickup and drop colors. Make sure the LDR is over the white patch at `85` before pressing `auto`. |
@@ -431,7 +432,7 @@ Most behavior is controlled from `config.h`:
 
 - pin assignments, including LCD and object sensor pins;
 - `OBJECT_SENSOR_ENABLED` (currently `false`);
-- `LCD_USE_I2C` and the I2C address;
+- `LCD_ENABLED` (currently `0`), `LCD_USE_I2C`, and the I2C address;
 - white-patch angle and RGB calibration timing/tolerance;
 - M2 travel and lift travel limits;
 - servo step size and delay;
