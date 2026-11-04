@@ -165,11 +165,11 @@ At the menu, choose `man`, `auto`, or `none`.
 Important: auto calibration does **not** know where red, green, or blue are
 before it starts. It only balances the white patch. The color scan happens
 afterward; the arm classifies each angle from the reflected R/G/B readings.
-Place the LDR over the white patch at `WHITE_PATCH_ANGLE` (default `90`) before
+Place the LDR over the white patch at `WHITE_PATCH_ANGLE` (default `85`) before
 pressing `auto`.
 
 1. The lift rises to `24` degrees.
-2. `man` moves M2 to `WHITE_PATCH_ANGLE` (default `90`) and repeatedly shows
+2. `man` moves M2 to `WHITE_PATCH_ANGLE` (default `85`) and repeatedly shows
    raw R/G/B readings plus the maximum. Turn the two brighter-channel
    potentiometers until the three readings match, then type `1`.
 3. `auto` moves M2 to the white patch, measures all three channels at full
@@ -419,7 +419,8 @@ These values are in `config.h` if the environment needs different timing.
 | LCD stays blank | Check the `LCD_USE_I2C` setting, the `LCD_*_PIN` values, and the I2C address. Parallel mode needs the `LiquidCrystal` library. |
 | Object sensor has no effect | It is disabled by default. Set `OBJECT_SENSOR_ENABLED = true`; then check `OBJECT_SENSOR_PIN`, `OBJECT_SENSOR_ACTIVE_LOW`, and the module output polarity. |
 | Color pick/place aborts | The source or destination color was not found, or both resolved to the same 5-degree M2 position. Check `x`, `v`, and the calibration table. |
-| Auto calibration just moves 5 degrees and flashes light | That is the post-calibration color sweep, not the white-balance step. Wait for `Base sweep done`, then send pickup and drop colors. Make sure the LDR is over the white patch at `90` before pressing `auto`. |
+| Auto calibration just moves 5 degrees and flashes light | That is the post-calibration color sweep, not the white-balance step. Wait for `Base sweep done`, then send pickup and drop colors. Make sure the LDR is over the white patch at `85` before pressing `auto`. |
+| Every sweep angle says `WHITE` | Auto calibrated against the wrong/dark surface. Put the LDR exactly over the white patch at `85`, keep all three pots at minimum resistance, and rerun `auto`. Check the printed `White average`; a very high target also prints the dark-white warning. |
 
 ## Configuration quick reference
 

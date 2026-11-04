@@ -230,6 +230,13 @@ void AutoCalibrate() {
 
   Serial.print("Target (dimmest channel) = ");
   Serial.println(target, 1);
+
+  if (target > RGB_TARGET_WARN_LEVEL) {
+    Serial.println("WARNING: the white-patch reading is very dark.");
+    Serial.println("Check WHITE_PATCH_ANGLE, that the LDR is over the white patch,");
+    Serial.println("and that all three pots are at minimum resistance.");
+  }
+
   Serial.println("Dimming the brighter channels...");
 
   int levels[3] = {
@@ -289,6 +296,15 @@ void AutoCalibrate() {
   Serial.print(rgbWhiteGreen, 1);
   Serial.print("/");
   Serial.println(rgbWhiteBlue, 1);
+
+  float whiteAverage =
+    (rgbWhiteRed + rgbWhiteGreen + rgbWhiteBlue) / 3.0f;
+  Serial.print("White average = ");
+  Serial.print(whiteAverage, 1);
+  Serial.print("; white spread limit = ");
+  Serial.print(whiteAverage * RGB_WHITE_SPREAD_RATIO, 1);
+  Serial.print("; dark threshold = ");
+  Serial.println(whiteAverage * RGB_DARK_RATIO, 1);
 }
 
 void readCalibratedRgb(float& red, float& green, float& blue) {

@@ -35,7 +35,7 @@ const int SERVO_PIN = 6;
 const int SERVO_HOME_ANGLE = 90;
 
 // Base angle over the white reference patch used for RGB balancing.
-const int WHITE_PATCH_ANGLE = SERVO_HOME_ANGLE;
+const int WHITE_PATCH_ANGLE = 85;
 
 // Mechanical travel of this rig, measured once: the arm goes 0..120
 // and must never be driven beyond that.
@@ -95,6 +95,9 @@ const float RGB_EQUAL_TOLERANCE = 15.0f;
 const float RGB_WHITE_SPREAD_RATIO = 0.20f;
 const float RGB_DARK_RATIO = 1.60f;
 const float RGB_DEFAULT_WHITE = 500.0f;
+// Warn when the white patch looks very dark. This usually means the LDR is
+// not over the white patch, the angle is wrong, or the pots are too high.
+const float RGB_TARGET_WARN_LEVEL = 800.0f;
 
 // -------- DETECTOR SETTINGS --------
 const int SAMPLES = 20;
