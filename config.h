@@ -93,9 +93,9 @@ const int RGB_CAL_MAX_LEVEL = 255;
 const int RGB_AUTO_SEARCH_STEPS = 8;
 const float RGB_EQUAL_TOLERANCE = 15.0f;
 // White/color decisions use channel readings normalized to the white
-// reference. Five percent is tighter than the old raw 20% window, which
+// reference. Three percent is tighter than the old raw 20% window, which
 // became enormous when the white reading was near 900.
-const float RGB_WHITE_SPREAD_RATIO = 0.05f;
+const float RGB_WHITE_SPREAD_RATIO = 0.03f;
 const float RGB_DARK_RATIO = 1.60f;
 // Do not let a high white reading push the dark cutoff above the ADC range.
 const float RGB_DARK_LEVEL = 950.0f;
