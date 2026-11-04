@@ -298,16 +298,26 @@ Open that address in a browser.
 
 The page provides:
 
-- mode switching and calibration/detection shortcuts;
+- **White-patch RGB / assignment** controls:
+  - **Manual RGB** (`man`) starts pot adjustment;
+  - **Finish manual** (`1`) saves the final reading;
+  - **Auto RGB** (`auto`) balances the channels automatically;
+  - **Reuse RGB / start** (`none`) skips calibration and starts the flow;
+  - **Pickup W/G/R/B** and **Drop W/G/R/B** answer the two color prompts;
+  - **Cancel prompt** (`c`) exits the color prompt.
+- legacy four-strip calibration/detection shortcuts;
 - M2 jog, angle jumps, limits, and scan;
 - lift up/down, fine jog, magnet toggle, and fixed pick/place;
-- color-to-color pick and place dropdowns;
+- legacy color-to-color pre-search pick/place dropdowns;
 - live status: mode, M2 angle, lift angle, calibrated strip count, LED color,
   candidate color, LDR reading, and magnet state.
 
-Some buttons are mode-dependent. For example, the calibration buttons work in
-calibration mode, and the detection seek buttons work in menu or detection
-mode. Use the **Menu** button first when switching between workflows.
+For the RGB assignment flow, use the buttons in order: start calibration,
+finish manual (if manual), then send the pickup color followed by the drop
+color. The firmware prints the RGB readings and detected color on the LCD and
+serial monitor while it sweeps. The legacy **Legacy four-strip calibration**
+buttons still use the old strip table; use **Menu** first when switching
+workflows.
 
 ### HTTP endpoints
 

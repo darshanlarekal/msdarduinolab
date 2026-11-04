@@ -180,9 +180,28 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 <pre id="status">loading...</pre>
 
 <h2>Mode</h2>
-<button onclick="cmd('s')">Sense / calibrate</button>
+<button onclick="cmd('s')">Legacy strip calibrate</button>
 <button onclick="cmd('o')">Old values + detect</button>
 <button onclick="cmd('c')">Menu</button>
+
+<h2>White-patch RGB / assignment</h2>
+<p>Manual: adjust the three pots, then press <b>Finish manual</b>. After the
+base sweep, send a pickup color, then a drop color.</p>
+<button onclick="cmd('man')">Manual RGB</button>
+<button onclick="cmd('auto')">Auto RGB</button>
+<button onclick="cmd('none')">Reuse RGB / start</button>
+<button onclick="cmd('1')">Finish manual</button>
+<button onclick="cmd('c')">Cancel prompt</button>
+<p>Pickup color:</p>
+<button onclick="cmd('w')">Pickup W</button>
+<button onclick="cmd('g')">Pickup G</button>
+<button onclick="cmd('r')">Pickup R</button>
+<button onclick="cmd('b')">Pickup B</button>
+<p>Drop color:</p>
+<button onclick="cmd('w')">Drop W</button>
+<button onclick="cmd('g')">Drop G</button>
+<button onclick="cmd('r')">Drop R</button>
+<button onclick="cmd('b')">Drop B</button>
 
 <h2>Servo</h2>
 <button onclick="cmd('a')">&lt; Left</button>
@@ -219,7 +238,7 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 </label>
 <button onclick="pickBetween()">Find and move</button>
 
-<h2>Calibration</h2>
+<h2>Legacy four-strip calibration</h2>
 <button onclick="cmd('w')">Cal W</button>
 <button onclick="cmd('b')">Cal B</button>
 <button onclick="cmd('g')">Cal G</button>
