@@ -303,8 +303,14 @@ void AutoCalibrate() {
   Serial.print(whiteAverage, 1);
   Serial.print("; white spread limit = ");
   Serial.print(whiteAverage * RGB_WHITE_SPREAD_RATIO, 1);
+
+  float darkThreshold = whiteAverage * RGB_DARK_RATIO;
+  if (darkThreshold > RGB_DARK_LEVEL) {
+    darkThreshold = RGB_DARK_LEVEL;
+  }
+
   Serial.print("; dark threshold = ");
-  Serial.println(whiteAverage * RGB_DARK_RATIO, 1);
+  Serial.println(darkThreshold, 1);
 }
 
 void readCalibratedRgb(float& red, float& green, float& blue) {
@@ -359,9 +365,11 @@ int classifyRgb(float red, float green, float blue) {
     return 0;
   }
 
-  // The brightest reflection has the lowest normalized LDR reading.
-  if (minimumRatio == redRatio) return 2;
-  if (minimumRatio == greenRatio) return 1;
+  // Choose the color from the raw channel minimum. The white readings are
+  // not perfectly equal, so normalizing the channel choice made blue/green
+  // ties flip to green. Normalized ratios are still used for the white test.
+  if (minimum == red) return 2;
+  if (minimum == green) return 1;
   return 3;
 }
 
