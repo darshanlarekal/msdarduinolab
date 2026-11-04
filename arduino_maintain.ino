@@ -1,9 +1,7 @@
 #include <Arduino.h>
 
-#include "calibration.h"
 #include "color_data.h"
 #include "config.h"
-#include "detection.h"
 #include "lcd_display.h"
 #include "menu.h"
 #include "modes.h"
@@ -21,7 +19,6 @@ void setup() {
   pinMode(BLUE_PIN, OUTPUT);
 
   turnOffRGB();
-  loadOldValues();
   initRgbCalibrationDefaults();
   initServo();
   initPickAndPlace();
@@ -30,7 +27,7 @@ void setup() {
 
   Serial.println("RGB + LDR CALIBRATION + COLOR DETECTOR");
   Serial.println("Arduino Uno R4 WiFi");
-  Serial.println("Sensing averages 50 LDR samples per light.");
+  Serial.println("Sensing averages 20 LDR samples per reading.");
 
   printMenuPrompt();
   wifiControlBegin();
@@ -41,11 +38,5 @@ void loop() {
 
   if (mode == MODE_MENU) {
     handleMenuInput();
-  }
-  else if (mode == MODE_CALIBRATION) {
-    handleCalibrationInput();
-  }
-  else {
-    runDetection();
   }
 }

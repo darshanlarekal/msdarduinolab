@@ -5,11 +5,8 @@
 #include <string.h>
 
 #include "assignment_flow.h"
-#include "calibration.h"
-#include "color_data.h"
 #include "command_input.h"
 #include "config.h"
-#include "detection.h"
 #include "lcd_display.h"
 #include "modes.h"
 #include "pick_place.h"
@@ -33,7 +30,6 @@ static const char* modeName() {
   switch (mode) {
     case MODE_MENU: return "MENU";
     case MODE_CALIBRATION: return "CALIBRATION";
-    case MODE_DETECTION: return "DETECTION";
   }
 
   return "UNKNOWN";
@@ -101,20 +97,6 @@ static void sendStatus(WiFiClient& client) {
   client.print(assignmentPromptText());
   client.print("\",\"m2\":");
   client.print(servoAngleNow());
-  client.print(",\"strips\":");
-  client.print(stripsCalibrated);
-  client.print(",\"displayed\":\"");
-  client.print(colors[displayedColor].name);
-  client.print("\",\"candidate\":\"");
-
-  if (candidateColor >= 0 && candidateColor < NUM_COLORS) {
-    client.print(colors[candidateColor].name);
-  } else {
-    client.print("none");
-  }
-
-  client.print("\",\"ldr\":");
-  client.print(lastLdrReading, 2);
   client.print(",\"lift\":");
   client.print(liftAngleNow());
   client.print(",\"magnet\":");
@@ -132,7 +114,7 @@ static int hexValue(char c) {
   return -1;
 }
 
-// Decode %XX escapes. A '+' stays a plus, so the '+' jog command works.
+// Decode %XX escapes. A '+' stays a plus.
 static bool decodeToken(const char* input, char* output, size_t outputSize) {
   size_t length = 0;
 
@@ -183,11 +165,6 @@ pre{background:#eee;padding:.6rem;border-radius:.4rem;white-space:pre-wrap}
 <h1>Color Sorter</h1>
 <pre id="status">loading...</pre>
 
-<h2>Mode</h2>
-<button onclick="cmd('s')">Legacy strip calibrate</button>
-<button onclick="cmd('o')">Old values + detect</button>
-<button onclick="cmd('c')">Menu</button>
-
 <h2>White-patch RGB / assignment</h2>
 <p>Manual: adjust the three pots, then press <b>Finish manual</b>. After the
 base sweep, send a pickup color, then a drop color.</p>
@@ -207,66 +184,11 @@ base sweep, send a pickup color, then a drop color.</p>
 <button onclick="cmd('r')">Drop R</button>
 <button onclick="cmd('b')">Drop B</button>
 
-<h2>Servo</h2>
-<button onclick="cmd('a')">&lt; Left</button>
-<button onclick="cmd('d')">Right &gt;</button>
-<button onclick="cmd('k')">Limits</button>
-<button onclick="cmd('v')">Scan</button>
-<input id="angle" type="number" min="0" max="120" value="90">
-<button onclick="cmd(document.getElementById('angle').value)">Go</button>
-
-<h2>Lift / magnet</h2>
-<button onclick="cmd('u')">Lift up (24&deg;)</button>
-<button onclick="cmd('l')">Lift down (54&deg;)</button>
-<button onclick="cmd('+')">Up +3&deg;</button>
-<button onclick="cmd('-')">Down -3&deg;</button>
-<button onclick="cmd('m')">Magnet toggle</button>
-<button onclick="cmd('p')">Pick here, place at 90&deg;</button>
-
-<h2>Pick color &rarr; place color</h2>
-<label>Pick from
-<select id="sourceColor">
-<option value="w">White</option>
-<option value="g">Green</option>
-<option value="r">Red</option>
-<option value="b">Blue</option>
-</select>
-</label>
-<label>Place at
-<select id="destColor">
-<option value="w">White</option>
-<option value="g">Green</option>
-<option value="r" selected>Red</option>
-<option value="b">Blue</option>
-</select>
-</label>
-<button onclick="pickBetween()">Find and move</button>
-
-<h2>Legacy four-strip calibration</h2>
-<button onclick="cmd('w')">Cal W</button>
-<button onclick="cmd('b')">Cal B</button>
-<button onclick="cmd('g')">Cal G</button>
-<button onclick="cmd('r')">Cal R</button>
-<button onclick="cmd('x')">Results</button>
-<button onclick="cmd('t')">Start detect</button>
-
-<h2>Detection</h2>
-<button onclick="cmd('w')">Seek W</button>
-<button onclick="cmd('b')">Seek B</button>
-<button onclick="cmd('g')">Seek G</button>
-<button onclick="cmd('r')">Seek R</button>
-<button onclick="cmd('x')">Values</button>
-
 <h2>Any command</h2>
 <input id="raw" type="text" placeholder="command">
 <button onclick="cmd(document.getElementById('raw').value);document.getElementById('raw').value=''">Send</button>
 
 <script>
-function pickBetween() {
-  const from = document.getElementById('sourceColor').value;
-  const to = document.getElementById('destColor').value;
-  cmd('pick' + from + to);
-}
 async function cmd(c) {
   if (!c) return;
   try {
@@ -287,9 +209,6 @@ async function refresh() {
       '\nPrompt: ' + (j.prompt || '') +
       '\nM2 servo: ' + j.m2 + ' deg' +
       '\nLift servo: ' + j.lift + ' deg' +
-      '\nCalibrated strips: ' + j.strips +
-      '\nLED: ' + j.displayed + ' | candidate: ' + j.candidate +
-      '\nLDR: ' + j.ldr +
       '\nMagnet: ' + (j.magnet ? 'ON' : 'OFF');
   } catch (e) {
   }

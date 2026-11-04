@@ -8,7 +8,6 @@
 #include "command_input.h"
 #include "config.h"
 #include "lcd_display.h"
-#include "sensing.h"
 #include "servo_arm.h"
 #include "wifi_control.h"
 
@@ -32,6 +31,18 @@ static float minimumOf(float a, float b, float c) {
   if (b < result) result = b;
   if (c < result) result = c;
   return result;
+}
+
+// Average of SAMPLES LDR readings.
+static float readAverageLDR() {
+  long total = 0;
+
+  for (int i = 0; i < SAMPLES; i++) {
+    total += analogRead(LDR_PIN);
+    delay(2);
+  }
+
+  return (float)total / SAMPLES;
 }
 
 // Read one LDR channel at the requested PWM level. The 80 ms delay is the
@@ -389,7 +400,7 @@ void sweepAndDisplayRgb() {
     readCalibratedRgb(red, green, blue);
 
     int detected = classifyRgb(red, green, blue);
-    const char* name = detected >= 0 ? colors[detected].name : "NONE";
+    const char* name = detected >= 0 ? defaultColors[detected].name : "NONE";
 
     lcdShowRgb(red, green, blue, name);
 
@@ -409,7 +420,7 @@ void sweepAndDisplayRgb() {
 
 bool findRgbColor(int targetIndex, int& foundAngle) {
   Serial.print("Searching pickup/drop color ");
-  Serial.print(colors[targetIndex].name);
+  Serial.print(defaultColors[targetIndex].name);
   Serial.println("...");
 
   for (int angle = SERVO_MIN_ANGLE;
@@ -424,13 +435,13 @@ bool findRgbColor(int targetIndex, int& foundAngle) {
     readCalibratedRgb(red, green, blue);
 
     int detected = classifyRgb(red, green, blue);
-    const char* name = detected >= 0 ? colors[detected].name : "NONE";
+    const char* name = detected >= 0 ? defaultColors[detected].name : "NONE";
 
     lcdShowRgb(red, green, blue, name);
 
     if (detected == targetIndex) {
       foundAngle = angle;
-      Serial.print(colors[targetIndex].name);
+      Serial.print(defaultColors[targetIndex].name);
       Serial.print(" found at ");
       Serial.print(angle);
       Serial.println(" deg.");
@@ -439,7 +450,7 @@ bool findRgbColor(int targetIndex, int& foundAngle) {
   }
 
   Serial.print("No ");
-  Serial.print(colors[targetIndex].name);
+  Serial.print(defaultColors[targetIndex].name);
   Serial.println(" found.");
   return false;
 }

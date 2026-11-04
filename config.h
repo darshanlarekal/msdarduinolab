@@ -45,18 +45,9 @@ const int WHITE_PATCH_ANGLE = 85;
 const int SERVO_MIN_ANGLE = 0;
 const int SERVO_MAX_ANGLE = 120;
 
-// Sweep used while hunting for a color.
+// Servo movement step used by the base sweep and color search.
 const int SERVO_STEP_DEG = 5;
 const unsigned long SERVO_STEP_DELAY_MS = 80;
-const int SEEK_STEP_DEG = SERVO_STEP_DEG;
-const int SEEK_SETTLE_MS = 150;
-const int SEEK_SAMPLES = 8;
-const int SEEK_REQUIRED_HITS = 2;
-const int JOG_STEP_DEG = SERVO_STEP_DEG;
-
-// A reading further than this from every calibration row is treated as
-// "nothing under the sensor" instead of the closest color.
-const float SEEK_MAX_MATCH_DISTANCE = 150.0f;
 
 // -------- LIFT / PICK (A0) --------
 // Up/down servo signal on A0. Power the servo from 5V/GND, not from A0.
@@ -93,13 +84,8 @@ const int LIFT_UP_ANGLE = 24;
 const int LIFT_DOWN_ANGLE = 54;
 const int LIFT_MIN_ANGLE = LIFT_UP_ANGLE;
 const int LIFT_MAX_ANGLE = LIFT_DOWN_ANGLE;
-const int LIFT_FINE_JOG_DEG = 3;
-
-// M2 destination after the object is picked up.
-const int PLACE_ANGLE = 90;
 
 const unsigned long LIFT_SETTLE_MS = 500;
-const unsigned long PICK_MOVE_SETTLE_MS = 500;
 const unsigned long MAGNET_PICK_MS = 5000;  // required pickup hold
 const unsigned long MAGNET_DROP_MS = 300;
 
@@ -122,15 +108,8 @@ const float RGB_DEFAULT_WHITE = 500.0f;
 // not over the white patch, the angle is wrong, or the pots are too high.
 const float RGB_TARGET_WARN_LEVEL = 800.0f;
 
-// -------- DETECTOR SETTINGS --------
+// Number of LDR samples averaged per measurement.
 const int SAMPLES = 20;
-const int REQUIRED_STABLE_SCANS = 3;
-const int SCAN_DELAY_MS = 40;
-
-// -------- CALIBRATION SETTINGS --------
-const int NUM_READINGS = 50;
-const int SETTLE_TIME_MS = 200;
-const int READING_DELAY_MS = 10;
 
 // -------- COMMAND INPUT --------
 // One typed command, lower case, without spaces or line endings.

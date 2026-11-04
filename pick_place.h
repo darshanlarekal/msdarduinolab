@@ -2,10 +2,6 @@
 
 void initPickAndPlace();
 
-// Manual lift, magnet and full pick/place commands.
-// Returns true when the token was handled.
-bool handlePickPlaceCommand();
-
 // Move the lift to an angle. Returns false if the servo cannot attach.
 bool liftTo(int angle);
 
